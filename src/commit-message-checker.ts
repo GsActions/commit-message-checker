@@ -82,6 +82,6 @@ export async function checkCommitMessages(
  * @returns   boolean
  */
 function checkMessage(message: string, pattern: string): boolean {
-  const regex = new RegExp(pattern)
+  const regex = new RegExp(pattern, 'gm')
   return regex.test(message)
 }

@@ -3047,7 +3047,7 @@ exports.checkCommitMessages = checkCommitMessages;
  * @returns   boolean
  */
 function checkMessage(message, pattern) {
-    const regex = new RegExp(pattern);
+    const regex = new RegExp(pattern, 'gm');
     return regex.test(message);
 }
 

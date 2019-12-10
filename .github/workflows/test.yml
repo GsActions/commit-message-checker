@@ -20,5 +20,5 @@ jobs:
       - uses: actions/checkout@v1
       - uses: ./
         with: 
-          pattern: '\[(BUGFIX|DOCS|FEATURE|TASK)\] .+($|\R)'
+          pattern: '\[(BUGFIX|DOCS|FEATURE|TASK)\] .+$'
           error: 'Your first line has to contain a commit type like "[BUGFIX]".'
