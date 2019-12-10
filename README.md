@@ -37,26 +37,21 @@ jobs:
     name: Check Commit Message
     runs-on: ubuntu-latest
     steps:
-      - name: Check Title Length
-        uses: gsactions/commit-message-checker@v1
-        with:
-          pattern: '^[^#].{54}'
-          error: '${error-common}: the maximum line length of 74 characters is exceeded.'
       - name: Check Commit Type
         uses: gsactions/commit-message-checker@v1
         with:
           pattern: '\[[^]]+\] .+$'
-          error: '${error-common}: your first line has to contain a commit type like "[BUGFIX]".'
+          error: 'Your first line has to contain a commit type like "[BUGFIX]".'
       - name: Check Line Length
         uses: gsactions/commit-message-checker@v1
         with:
           pattern: '^[^#].{74}'
-          error: '${error-common}: the maximum line length of 74 characters is exceeded.'
+          error: 'The maximum line length of 74 characters is exceeded.'
       - name: Check for Resolves / Fixes
         uses: gsactions/commit-message-checker@v1
         with:
           pattern: '^.+(Resolves|Fixes): \#[0-9]+$'
-          error: '${error-common}: you need at least one "Resolves|Fixes: #<issue number>" line.'
+          error: 'You need at least one "Resolves|Fixes: #<issue number>" line.'
 ```
 
 ## Development
