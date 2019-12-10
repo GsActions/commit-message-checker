@@ -1,0 +1,13 @@
+name: 'GS Commit Message Checker'
+description: 'Check the commit message against a regex pattern'
+author: 'Gilbertsoft LLC'
+inputs:
+  pattern:
+    description: 'A regex pattern to check if a commit message is valid.'
+    required: true
+  error:
+    description: 'A error message which will be returned in case of an error.'
+    required: true
+runs:
+  using: node12
+  main: dist/index.js

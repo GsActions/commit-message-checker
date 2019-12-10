@@ -1,0 +1,58 @@
+{
+  "name": "@gsactions/commit-message-checker",
+  "version": "0.1.0",
+  "description": "GitHub Action that checks commit messages of pushes and pull request against a regex pattern",
+  "keywords": [
+    "github",
+    "actions",
+    "commit",
+    "message",
+    "pull",
+    "request",
+    "push"
+  ],
+  "homepage": "https://github.com/GsActions/commit-message-checker#readme",
+  "bugs": {
+    "url": "https://github.com/GsActions/commit-message-checker/issues"
+  },
+  "license": "MIT",
+  "author": "Simon Gilli <ghactions@gilbertsoft.org> (https://gilbertsoft.org)",
+  "files": [
+    "action.yml",
+    "dist",
+    "lib"
+  ],
+  "main": "lib/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GsActions/commit-message-checker.git"
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write **/*.ts",
+    "format-check": "prettier --check **/*.ts",
+    "lint": "eslint src/**/*.ts",
+    "pack": "ncc build",
+    "test": "jest",
+    "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.0",
+    "@actions/github": "^1.1.0"
+  },
+  "devDependencies": {
+    "@types/jest": "^24.0.23",
+    "@types/node": "^12.7.12",
+    "@typescript-eslint/parser": "^1.9.0",
+    "@zeit/ncc": "^0.20.5",
+    "eslint": "^5.16.0",
+    "eslint-plugin-github": "^2.0.0",
+    "eslint-plugin-jest": "^22.21.0",
+    "jest": "^24.9.0",
+    "jest-circus": "^24.9.0",
+    "js-yaml": "^3.13.1",
+    "prettier": "^1.19.1",
+    "ts-jest": "^24.2.0",
+    "typescript": "^3.6.4"
+  }
+}
