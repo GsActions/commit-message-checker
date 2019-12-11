@@ -33,6 +33,9 @@ export function getInputs(): ICheckerArguments {
   // Get pattern
   result.pattern = core.getInput('pattern', {required: true})
 
+  // Get flags
+  result.flags = core.getInput('flags')
+
   // Get error message
   result.error = core.getInput('error', {required: true})
 

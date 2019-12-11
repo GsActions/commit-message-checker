@@ -5,6 +5,10 @@ inputs:
   pattern:
     description: 'A regex pattern to check if a commit message is valid.'
     required: true
+  flags:
+    description: 'Expression flags change how the expression is interpreted.'
+    required: false
+    default: 'gm'
   error:
     description: 'A error message which will be returned in case of an error.'
     required: true
