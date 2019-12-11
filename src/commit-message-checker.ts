@@ -26,6 +26,7 @@ import * as core from '@actions/core'
  */
 export interface ICheckerArguments {
   pattern: string
+  flags: string
   error: string
   messages: string[]
 }
@@ -44,6 +45,16 @@ export async function checkCommitMessages(
     throw new Error(`PATTERN not defined.`)
   }
 
+  const regex = new RegExp('[^gimsuy]', 'g')
+  let invalidChars
+  let chars = ''
+  while ((invalidChars = regex.exec(args.flags)) !== null) {
+    chars += invalidChars[0]
+  }
+  if (chars !== '') {
+    throw new Error(`FLAGS contains invalid characters "${chars}".`)
+  }
+
   if (args.error.length === 0) {
     throw new Error(`ERROR not defined.`)
   }
@@ -58,7 +69,7 @@ export async function checkCommitMessages(
   core.info(`Checking commit messages against "${args.pattern}"...`)
 
   for (const message of args.messages) {
-    if (checkMessage(message, args.pattern)) {
+    if (checkMessage(message, args.pattern, args.flags)) {
       core.info(`- OK: "${message}"`)
     } else {
       core.info(`- failed: "${message}"`)
@@ -79,7 +90,11 @@ export async function checkCommitMessages(
  * @param     pattern regex pattern for the check.
  * @returns   boolean
  */
-function checkMessage(message: string, pattern: string): boolean {
-  const regex = new RegExp(pattern, 'gm')
+function checkMessage(
+  message: string,
+  pattern: string,
+  flags: string
+): boolean {
+  const regex = new RegExp(pattern, flags)
   return regex.test(message)
 }

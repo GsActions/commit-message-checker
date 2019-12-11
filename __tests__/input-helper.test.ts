@@ -28,7 +28,7 @@ let inputHelper: any
 let inputs = {} as any
 const mockCore = jest.genMockFromModule('@actions/core') as any
 mockCore.getInput = (name: string, options?: InputOptions) => {
-  const val = inputs[name]
+  const val = inputs[name] || ''
   if (options && options.required && !val) {
     throw new Error(`Input required and not supplied: ${name}`)
   }
@@ -90,6 +90,23 @@ describe('input-helper tests', () => {
     expect(() => {
       const checkerArguments: ICheckerArguments = inputHelper.getInputs()
     }).toThrow('Event "some-event" is not supported.')
+  })
+
+  it('sets flags', () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: ''
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.flags = 'abcdefgh'
+    inputs.error = 'some-error'
+    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    expect(checkerArguments.flags).toBe('abcdefgh')
   })
 
   it('requires pull_request payload', () => {

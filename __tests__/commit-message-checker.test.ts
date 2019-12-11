@@ -32,6 +32,7 @@ describe('commit-message-checker tests', () => {
   it('requires pattern', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: '',
+      flags: '',
       error: '',
       messages: []
     }
@@ -40,9 +41,22 @@ describe('commit-message-checker tests', () => {
     ).rejects.toThrow('PATTERN not defined.')
   })
 
+  it('requires valid flags', async () => {
+    const checkerArguments: ICheckerArguments = {
+      pattern: 'some-pattern',
+      flags: 'abcdefgh',
+      error: '',
+      messages: []
+    }
+    await expect(
+      commitMessageChecker.checkCommitMessages(checkerArguments)
+    ).rejects.toThrow('FLAGS contains invalid characters "abcdefh".')
+  })
+
   it('requires error message', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
+      flags: '',
       error: '',
       messages: []
     }
@@ -54,6 +68,7 @@ describe('commit-message-checker tests', () => {
   it('requires messages', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
+      flags: '',
       error: 'some-error',
       messages: []
     }
@@ -65,6 +80,7 @@ describe('commit-message-checker tests', () => {
   it('check fails single message', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
+      flags: '',
       error: 'some-error',
       messages: ['some-message']
     }
@@ -76,6 +92,7 @@ describe('commit-message-checker tests', () => {
   it('check fails multiple messages', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
+      flags: '',
       error: 'some-error',
       messages: ['some-message', 'some-pattern']
     }
@@ -87,6 +104,7 @@ describe('commit-message-checker tests', () => {
   it('check succeeds on single message', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: '.*',
+      flags: '',
       error: 'some-error',
       messages: ['some-message']
     }
@@ -98,6 +116,7 @@ describe('commit-message-checker tests', () => {
   it('check succeeds on multiple messages', async () => {
     const checkerArguments: ICheckerArguments = {
       pattern: '.*',
+      flags: '',
       error: 'some-error',
       messages: ['some-message', 'other-message']
     }

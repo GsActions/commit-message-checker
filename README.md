@@ -16,6 +16,11 @@ for pushes etc. etc.
 
 ## Configuration
 
+More information about `pattern` and `flags` can be found in the
+[JavaScript reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp).
+
+`flags` is optional and defaults to `gm`.
+
 ### Example Workflow
 
 ```yml
@@ -41,6 +46,7 @@ jobs:
         uses: gsactions/commit-message-checker@v1
         with:
           pattern: '\[[^]]+\] .+$'
+          flags: 'gm'
           error: 'Your first line has to contain a commit type like "[BUGFIX]".'
       - name: Check Line Length
         uses: gsactions/commit-message-checker@v1

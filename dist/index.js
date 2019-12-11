@@ -3012,6 +3012,15 @@ function checkCommitMessages(args) {
         if (args.pattern.length === 0) {
             throw new Error(`PATTERN not defined.`);
         }
+        const regex = new RegExp('[^gimsuy]', 'g');
+        let invalidChars;
+        let chars = '';
+        while ((invalidChars = regex.exec(args.flags)) !== null) {
+            chars += invalidChars[0];
+        }
+        if (chars !== '') {
+            throw new Error(`FLAGS contains invalid characters "${chars}".`);
+        }
         if (args.error.length === 0) {
             throw new Error(`ERROR not defined.`);
         }
@@ -3022,7 +3031,7 @@ function checkCommitMessages(args) {
         let result = true;
         core.info(`Checking commit messages against "${args.pattern}"...`);
         for (const message of args.messages) {
-            if (checkMessage(message, args.pattern)) {
+            if (checkMessage(message, args.pattern, args.flags)) {
                 core.info(`- OK: "${message}"`);
             }
             else {
@@ -3044,8 +3053,8 @@ exports.checkCommitMessages = checkCommitMessages;
  * @param     pattern regex pattern for the check.
  * @returns   boolean
  */
-function checkMessage(message, pattern) {
-    const regex = new RegExp(pattern, 'gm');
+function checkMessage(message, pattern, flags) {
+    const regex = new RegExp(pattern, flags);
     return regex.test(message);
 }
 
@@ -8633,6 +8642,8 @@ function getInputs() {
     const result = {};
     // Get pattern
     result.pattern = core.getInput('pattern', { required: true });
+    // Get flags
+    result.flags = core.getInput('flags');
     // Get error message
     result.error = core.getInput('error', { required: true });
     // Get error message
