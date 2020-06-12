@@ -37,22 +37,22 @@
     "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
   },
   "dependencies": {
-    "@actions/core": "^1.2.0",
+    "@actions/core": "^1.2.4",
     "@actions/github": "^1.1.0"
   },
   "devDependencies": {
-    "@types/jest": "^24.0.23",
-    "@types/node": "^12.7.12",
+    "@types/jest": "^24.9.1",
+    "@types/node": "^12.12.47",
     "@typescript-eslint/parser": "^1.9.0",
     "@zeit/ncc": "^0.20.5",
     "eslint": "^5.16.0",
     "eslint-plugin-github": "^2.0.0",
     "eslint-plugin-jest": "^22.21.0",
-    "jest": "^24.9.0",
-    "jest-circus": "^24.9.0",
-    "js-yaml": "^3.13.1",
+    "jest": "^26.0.1",
+    "jest-circus": "^26.0.1",
+    "js-yaml": "^3.14.0",
     "prettier": "^1.19.1",
-    "ts-jest": "^24.2.0",
-    "typescript": "^3.6.4"
+    "ts-jest": "^26.1.0",
+    "typescript": "^3.9.5"
   }
 }
