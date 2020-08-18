@@ -28,7 +28,11 @@ import * as commitMessageChecker from './commit-message-checker'
 async function run(): Promise<void> {
   try {
     const checkerArguments = inputHelper.getInputs()
-    await commitMessageChecker.checkCommitMessages(checkerArguments)
+    if (checkerArguments.messages.length === 0) {
+      core.info(`No commits found in the payload, skipping check.`)
+    } else {
+      await commitMessageChecker.checkCommitMessages(checkerArguments)
+    }
   } catch (error) {
     core.error(error)
     core.setFailed(error.message)
