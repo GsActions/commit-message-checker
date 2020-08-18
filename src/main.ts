@@ -30,8 +30,7 @@ async function run(): Promise<void> {
     const checkerArguments = inputHelper.getInputs()
     await commitMessageChecker.checkCommitMessages(checkerArguments)
   } catch (error) {
-    core.error(error)
-    core.setFailed(error.message)
+    core.setFailed(error)
   }
 }
 
