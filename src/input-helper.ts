@@ -86,9 +86,6 @@ function getMessages(): string[] {
           }
         }
       }
-      if (messages.length === 0) {
-        throw new Error(`No commits found in the payload.`)
-      }
       break
     }
     default: {

@@ -166,19 +166,18 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-title\n\nsome-body')
   })
 
-  it('requires push payload', () => {
+  it('push payload is optional', () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {}
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('No commits found in the payload.')
+    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    expect(checkerArguments.messages).toHaveLength(0)
   })
 
-  it('requires push payload commits', () => {
+  it('push payload commits is optional', () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {
@@ -187,9 +186,8 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('No commits found in the payload.')
+    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    expect(checkerArguments.messages).toHaveLength(0)
   })
 
   it('sets correct single push payload', () => {
