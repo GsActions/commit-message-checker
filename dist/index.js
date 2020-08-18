@@ -3366,11 +3366,15 @@ function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             const checkerArguments = inputHelper.getInputs();
-            yield commitMessageChecker.checkCommitMessages(checkerArguments);
+            if (checkerArguments.messages.length === 0) {
+                core.info(`No commits found in the payload, skipping check.`);
+            }
+            else {
+                yield commitMessageChecker.checkCommitMessages(checkerArguments);
+            }
         }
         catch (error) {
-            core.error(error);
-            core.setFailed(error.message);
+            core.setFailed(error);
         }
     });
 }
@@ -8775,9 +8779,6 @@ function getMessages() {
                         messages.push(github.context.payload.commits[i].message);
                     }
                 }
-            }
-            if (messages.length === 0) {
-                throw new Error(`No commits found in the payload.`);
             }
             break;
         }
