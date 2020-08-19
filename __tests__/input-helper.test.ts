@@ -166,6 +166,27 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-title\n\nsome-body')
   })
 
+  it('excludes pull_request body payload', () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: 'some-body'
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.excludeDescription = '1'
+    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    expect(checkerArguments).toBeTruthy()
+    expect(checkerArguments.pattern).toBe('some-pattern')
+    expect(checkerArguments.error).toBe('some-error')
+    expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages[0]).toBe('some-title')
+  })
+
   it('push payload is optional', () => {
     mockGitHub.context = {
       eventName: 'push',

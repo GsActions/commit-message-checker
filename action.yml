@@ -12,6 +12,10 @@ inputs:
   error:
     description: 'A error message which will be returned in case of an error.'
     required: true
+  excludeDescription:
+    description: 'Setting this input to 1 will exclude the Pull Request description from the check.'
+    required: false
+    default: ''
 runs:
   using: node12
   main: dist/index.js

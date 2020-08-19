@@ -53,6 +53,7 @@ jobs:
         with:
           pattern: '^[^#].{74}'
           error: 'The maximum line length of 74 characters is exceeded.'
+          excludeDescription: '1'
       - name: Check for Resolves / Fixes
         uses: gsactions/commit-message-checker@v1
         with:
