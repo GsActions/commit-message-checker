@@ -23,7 +23,7 @@ More information about `pattern` and `flags` can be found in the
 
 `flags` is optional and defaults to `gm`.
 
-`excludeDescription` is optional and defaults to `` (include the description).
+`excludeDescription` is optional. Default behavior is to include the description.
 
 ### Example Workflow
 
