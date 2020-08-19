@@ -16,10 +16,14 @@ for pushes etc. etc.
 
 ## Configuration
 
+See also [action definition](action.yml) and the following example workflow.
+
 More information about `pattern` and `flags` can be found in the
 [JavaScript reference](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/RegExp).
 
 `flags` is optional and defaults to `gm`.
+
+`excludeDescription` is optional and defaults to `` (include the description).
 
 ### Example Workflow
 
