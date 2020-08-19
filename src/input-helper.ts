@@ -39,8 +39,11 @@ export function getInputs(): ICheckerArguments {
   // Get error message
   result.error = core.getInput('error', {required: true})
 
+  // Get excludeDescription
+  const excludeDescription = core.getInput('excludeDescription') !== ''
+
   // Get error message
-  result.messages = getMessages()
+  result.messages = getMessages(excludeDescription)
 
   return result
 }
@@ -51,7 +54,7 @@ export function getInputs(): ICheckerArguments {
  *
  * @returns   string[]
  */
-function getMessages(): string[] {
+function getMessages(excludeDescription: boolean): string[] {
   const messages: string[] = []
 
   switch (github.context.eventName) {
@@ -62,7 +65,7 @@ function getMessages(): string[] {
         github.context.payload.pull_request.title
       ) {
         let message: string = github.context.payload.pull_request.title
-        if (github.context.payload.pull_request.body) {
+        if (github.context.payload.pull_request.body && !excludeDescription) {
           message = message.concat(
             '\n\n',
             github.context.payload.pull_request.body
