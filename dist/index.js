@@ -8741,8 +8741,10 @@ function getInputs() {
     result.flags = core.getInput('flags');
     // Get error message
     result.error = core.getInput('error', { required: true });
+    // Get excludeDescription
+    const excludeDescription = core.getInput('excludeDescription') !== '';
     // Get error message
-    result.messages = getMessages();
+    result.messages = getMessages(excludeDescription);
     return result;
 }
 exports.getInputs = getInputs;
@@ -8752,7 +8754,7 @@ exports.getInputs = getInputs;
  *
  * @returns   string[]
  */
-function getMessages() {
+function getMessages(excludeDescription) {
     const messages = [];
     switch (github.context.eventName) {
         case 'pull_request': {
@@ -8760,7 +8762,7 @@ function getMessages() {
                 github.context.payload.pull_request &&
                 github.context.payload.pull_request.title) {
                 let message = github.context.payload.pull_request.title;
-                if (github.context.payload.pull_request.body) {
+                if (github.context.payload.pull_request.body && !excludeDescription) {
                     message = message.concat('\n\n', github.context.payload.pull_request.body);
                 }
                 messages.push(message);
