@@ -23,7 +23,7 @@ More information about `pattern` and `flags` can be found in the
 
 `flags` is optional and defaults to `gm`.
 
-`excludeDescription` is optional. Default behavior is to include the description.
+`excludeDescription`, `excludeTitle` and `checkAllCommitMessages` are optional. Default behavior is to include the description and title and not check pull request commit messages.
 
 ### Example Workflow
 
@@ -57,7 +57,10 @@ jobs:
         with:
           pattern: '^[^#].{74}'
           error: 'The maximum line length of 74 characters is exceeded.'
-          excludeDescription: '1'
+          excludeDescription: 'true' # optional: this excludes the description body of a pull request
+          excludeTitle: 'true' # optional: this excludes the title of a pull request
+          checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
+          accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
       - name: Check for Resolves / Fixes
         uses: gsactions/commit-message-checker@v1
         with:
