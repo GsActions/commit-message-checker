@@ -60,39 +60,39 @@ describe('input-helper tests', () => {
     jest.resetModules()
   })
 
-  it('requires pattern', () => {
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('Input required and not supplied: pattern')
+  it('requires pattern', async () => {
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'Input required and not supplied: pattern'
+    )
   })
 
-  it('requires error message', () => {
+  it('requires error message', async () => {
     inputs.pattern = 'some-pattern'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('Input required and not supplied: error')
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'Input required and not supplied: error'
+    )
   })
 
-  it('requires event', () => {
+  it('requires event', async () => {
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('Event "undefined" is not supported.')
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'Event "undefined" is not supported.'
+    )
   })
 
-  it('requires valid event', () => {
+  it('requires valid event', async () => {
     mockGitHub.context = {
       eventName: 'some-event'
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('Event "some-event" is not supported.')
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'Event "some-event" is not supported.'
+    )
   })
 
-  it('sets flags', () => {
+  it('sets flags', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -105,11 +105,11 @@ describe('input-helper tests', () => {
     inputs.pattern = 'some-pattern'
     inputs.flags = 'abcdefgh'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments.flags).toBe('abcdefgh')
   })
 
-  it('requires pull_request payload', () => {
+  it('requires pull_request payload', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -121,12 +121,12 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    expect(() => {
-      const checkerArguments: ICheckerArguments = inputHelper.getInputs()
-    }).toThrow('No pull_request found in the payload.')
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No pull_request found in the payload.'
+    )
   })
 
-  it('sets correct pull_request title payload', () => {
+  it('sets correct pull_request title payload', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -138,7 +138,7 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
@@ -146,7 +146,7 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-title')
   })
 
-  it('sets correct pull_request title and body payload', () => {
+  it('sets correct pull_request title and body payload', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -158,7 +158,7 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
@@ -166,7 +166,7 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-title\n\nsome-body')
   })
 
-  it('excludes pull_request body payload', () => {
+  it('excludes pull_request body payload', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -179,7 +179,7 @@ describe('input-helper tests', () => {
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
     inputs.excludeDescription = '1'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
@@ -187,18 +187,18 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-title')
   })
 
-  it('push payload is optional', () => {
+  it('push payload is optional', async () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {}
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments.messages).toHaveLength(0)
   })
 
-  it('push payload commits is optional', () => {
+  it('push payload commits is optional', async () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {
@@ -207,11 +207,11 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments.messages).toHaveLength(0)
   })
 
-  it('sets correct single push payload', () => {
+  it('sets correct single push payload', async () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {
@@ -224,7 +224,7 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
@@ -232,7 +232,7 @@ describe('input-helper tests', () => {
     expect(checkerArguments.messages[0]).toBe('some-message')
   })
 
-  it('sets correct multiple push payload', () => {
+  it('sets correct multiple push payload', async () => {
     mockGitHub.context = {
       eventName: 'push',
       payload: {
@@ -248,7 +248,7 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    const checkerArguments: ICheckerArguments = inputHelper.getInputs()
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
