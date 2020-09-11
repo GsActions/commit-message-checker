@@ -21,6 +21,14 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {ICheckerArguments} from './commit-message-checker'
+const fetch = require('node-fetch')
+
+export interface PullRequestOptions {
+  ignoreTitle: boolean
+  ignoreDescription: boolean
+  checkAllCommitMessages: boolean // requires github token
+  accessToken: string
+}
 
 /**
  * Gets the inputs set by the user and the messages of the event.
@@ -39,11 +47,25 @@ export async function getInputs(): Promise<ICheckerArguments> {
   // Get error message
   result.error = core.getInput('error', {required: true})
 
-  // Get excludeDescription
-  const excludeDescription = core.getInput('excludeDescription') !== ''
+  let excludeTitleStr = core.getInput('excludeTitle')
+  let excludeDescriptionStr = core.getInput('excludeDescription')
+  let checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages')
 
+  // Get excludeDescription
+  const pullRequestOptions: PullRequestOptions = {
+    ignoreTitle: excludeTitleStr
+      ? excludeTitleStr === 'true'
+      : /* default */ false,
+    ignoreDescription: excludeDescriptionStr
+      ? excludeDescriptionStr === 'true'
+      : /* default */ false,
+    checkAllCommitMessages: checkAllCommitMessagesStr
+      ? checkAllCommitMessagesStr === 'true'
+      : /* default */ false,
+    accessToken: core.getInput('accessToken')
+  }
   // Get error message
-  result.messages = await getMessages(excludeDescription)
+  result.messages = await getMessages(pullRequestOptions)
 
   return result
 }
@@ -54,7 +76,9 @@ export async function getInputs(): Promise<ICheckerArguments> {
  *
  * @returns   string[]
  */
-async function getMessages(excludeDescription: boolean): Promise<string[]> {
+async function getMessages(
+  pullRequestOptions: PullRequestOptions
+): Promise<string[]> {
   const messages: string[] = []
 
   switch (github.context.eventName) {
@@ -64,17 +88,48 @@ async function getMessages(excludeDescription: boolean): Promise<string[]> {
         github.context.payload.pull_request &&
         github.context.payload.pull_request.title
       ) {
-        let message: string = github.context.payload.pull_request.title
-        if (github.context.payload.pull_request.body && !excludeDescription) {
+        let message: string = ''
+
+        if (!pullRequestOptions.ignoreTitle) {
+          message += github.context.payload.pull_request.title
+        }
+
+        if (
+          github.context.payload.pull_request.body &&
+          !pullRequestOptions.ignoreDescription
+        ) {
           message = message.concat(
-            '\n\n',
+            message !== '' ? '\n\n' : '',
             github.context.payload.pull_request.body
           )
         }
-        messages.push(message)
+        // dont add message if title and body were ignored
+        if (
+          !pullRequestOptions.ignoreTitle ||
+          !pullRequestOptions.ignoreDescription
+        ) {
+          messages.push(message)
+        }
       } else {
         throw new Error(`No pull_request found in the payload.`)
       }
+
+      if (pullRequestOptions.checkAllCommitMessages) {
+        if (!pullRequestOptions.accessToken) {
+          throw new Error(
+            `checkAllCommitMessaages option requires a github access token.`
+          )
+        }
+        const commitMessages = await getCommitMessagesFromPullRequest(
+          pullRequestOptions.accessToken
+        )
+        for (const i in commitMessages) {
+          if (commitMessages[i]) {
+            messages.push(commitMessages[i])
+          }
+        }
+      }
+
       break
     }
     case 'push': {
@@ -96,5 +151,49 @@ async function getMessages(excludeDescription: boolean): Promise<string[]> {
     }
   }
 
+  return messages
+}
+
+async function getCommitMessagesFromPullRequest(
+  accessToken: string
+): Promise<any> {
+  const pullRequest = github.context.payload.pull_request
+  const repo = github.context.payload.repository
+  if (!repo || !pullRequest) return null
+
+  const body = {
+    query: `
+    query{ 
+      repository(owner: "${repo.owner.name}", name:"${repo.name}") {
+        pullRequest(number: ${pullRequest.number}) {
+          commits (last: 100) {
+            edges {
+              node {
+                commit {
+                  message
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    `
+  }
+
+  const response = await fetch('https://api.github.com/graphql', {
+    method: 'post',
+    body: JSON.stringify(body),
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: 'bearer ' + accessToken
+    }
+  })
+  const json = await response.json()
+  const messages = json.data.repository.pullRequest.commits.edges.map(function(
+    commit: any
+  ) {
+    return commit.node.commit.message
+  })
   return messages
 }

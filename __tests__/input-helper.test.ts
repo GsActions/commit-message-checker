@@ -178,13 +178,87 @@ describe('input-helper tests', () => {
     }
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
-    inputs.excludeDescription = '1'
+    inputs.excludeDescription = 'true'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages[0]).toBe('some-title')
+  })
+
+  it('excludes pull_request title', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: 'some-body'
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.excludeTitle = 'true'
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
+    expect(checkerArguments).toBeTruthy()
+    expect(checkerArguments.pattern).toBe('some-pattern')
+    expect(checkerArguments.error).toBe('some-error')
+    expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages[0]).toBe('some-body')
+  })
+
+  it('excludes pull_request title and body', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: 'some-body'
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.excludeDescription = 'true'
+    inputs.excludeTitle = 'true'
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
+    expect(checkerArguments).toBeTruthy()
+    expect(checkerArguments.pattern).toBe('some-pattern')
+    expect(checkerArguments.error).toBe('some-error')
+    expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages.length).toBe(0)
+  })
+
+  it('should check pull_request commits', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: 'some-body',
+          number: 62 // This pull request has exactly two commits
+        },
+        repository: {
+          owner: {
+            name: 'TotalCross'
+          },
+          name: 'totalcross'
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.excludeDescription = 'true'
+    inputs.excludeTitle = 'true'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = process.env.ACCESS_TOKEN
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
+    expect(checkerArguments).toBeTruthy()
+    expect(checkerArguments.pattern).toBe('some-pattern')
+    expect(checkerArguments.error).toBe('some-error')
+    expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages.length).toBe(2)
   })
 
   it('push payload is optional', async () => {
