@@ -27,7 +27,7 @@ import {ICheckerArguments} from './commit-message-checker'
  *
  * @returns   ICheckerArguments
  */
-export function getInputs(): ICheckerArguments {
+export async function getInputs(): Promise<ICheckerArguments> {
   const result = ({} as unknown) as ICheckerArguments
 
   // Get pattern
@@ -43,7 +43,7 @@ export function getInputs(): ICheckerArguments {
   const excludeDescription = core.getInput('excludeDescription') !== ''
 
   // Get error message
-  result.messages = getMessages(excludeDescription)
+  result.messages = await getMessages(excludeDescription)
 
   return result
 }
@@ -54,7 +54,7 @@ export function getInputs(): ICheckerArguments {
  *
  * @returns   string[]
  */
-function getMessages(excludeDescription: boolean): string[] {
+async function getMessages(excludeDescription: boolean): Promise<string[]> {
   const messages: string[] = []
 
   switch (github.context.eventName) {
