@@ -17,12 +17,12 @@ jobs:
         run: |
           npm install
           npm run all
-        
+
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
       - uses: ./
-        with: 
+        with:
           pattern: '\[(BUGFIX|DOCS|FEATURE|TASK)\] .+$'
           error: 'Your first line has to contain a commit type like "[BUGFIX]".'

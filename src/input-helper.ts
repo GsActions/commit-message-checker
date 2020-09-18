@@ -163,7 +163,7 @@ async function getCommitMessagesFromPullRequest(
 
   const body = {
     query: `
-    query{ 
+    query{
       repository(owner: "${repo.owner.name}", name:"${repo.name}") {
         pullRequest(number: ${pullRequest.number}) {
           commits (last: 100) {
