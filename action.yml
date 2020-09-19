@@ -12,10 +12,22 @@ inputs:
   error:
     description: 'A error message which will be returned in case of an error.'
     required: true
-  excludeDescription:
-    description: 'Setting this input to 1 will exclude the Pull Request description from the check.'
+  excludeTitle:
+    description: 'Setting this input to true will exclude the Pull Request title from the check.'
     required: false
-    default: ''
+    default: 'false'
+  excludeDescription:
+    description: 'Setting this input to true will exclude the Pull Request description from the check.'
+    required: false
+    default: 'false'
+  checkAllCommitMessages:
+    description: 'Setting this input to true will check all Pull Request commits'
+    required: false
+    default: 'false'
+  accessToken:
+    description: 'you must provide GITHUB_TOKEN to this input if checkAllCommitMessages is true'
+    required: false
+    default: 'false'  
 runs:
   using: node12
   main: dist/index.js
