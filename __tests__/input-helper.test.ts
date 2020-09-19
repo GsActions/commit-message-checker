@@ -39,11 +39,19 @@ mockCore.getInput = (name: string, options?: InputOptions) => {
 const mockGitHub = jest.genMockFromModule('@actions/github') as any
 mockGitHub.context = {}
 
+// Mock @octokit/graphql
+let graphqlResponse = {} as any
+const mockGraphql = jest.genMockFromModule('@octokit/graphql') as any
+mockGraphql.graphql = (query: string, parameters?: any): any => {
+  return graphqlResponse
+}
+
 describe('input-helper tests', () => {
   beforeAll(() => {
     // Mocks
     jest.setMock('@actions/core', mockCore)
     jest.setMock('@actions/github', mockGitHub)
+    jest.setMock('@octokit/graphql', mockGraphql)
 
     // Now import
     inputHelper = require('../lib/input-helper')
@@ -53,6 +61,7 @@ describe('input-helper tests', () => {
     // Reset inputs and context
     inputs = {}
     mockGitHub.context = {}
+    graphqlResponse = {}
   })
 
   afterAll(() => {
@@ -92,6 +101,23 @@ describe('input-helper tests', () => {
     )
   })
 
+  it('sets pattern', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: ''
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.flags = 'abcdefgh'
+    inputs.error = 'some-error'
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
+    expect(checkerArguments.pattern).toBe('some-pattern')
+  })
+
   it('sets flags', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
@@ -109,7 +135,47 @@ describe('input-helper tests', () => {
     expect(checkerArguments.flags).toBe('abcdefgh')
   })
 
+  it('sets error', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: ''
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.flags = 'abcdefgh'
+    inputs.error = 'some-error'
+    const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
+    expect(checkerArguments.error).toBe('some-error')
+  })
+
   it('requires pull_request payload', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request'
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No payload found in the context.'
+    )
+  })
+
+  it('requires pull_request', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {}
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No pull_request found in the payload.'
+    )
+  })
+
+  it('requires pull_request title', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -122,11 +188,11 @@ describe('input-helper tests', () => {
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
     await expect(inputHelper.getInputs()).rejects.toThrow(
-      'No pull_request found in the payload.'
+      'No title found in the pull_request.'
     )
   })
 
-  it('sets correct pull_request title payload', async () => {
+  it('sets pull_request title', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -140,13 +206,11 @@ describe('input-helper tests', () => {
     inputs.error = 'some-error'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
-    expect(checkerArguments.pattern).toBe('some-pattern')
-    expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages[0]).toBe('some-title')
   })
 
-  it('sets correct pull_request title and body payload', async () => {
+  it('sets pull_request title and body', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -160,13 +224,11 @@ describe('input-helper tests', () => {
     inputs.error = 'some-error'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
-    expect(checkerArguments.pattern).toBe('some-pattern')
-    expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages[0]).toBe('some-title\n\nsome-body')
   })
 
-  it('excludes pull_request body payload', async () => {
+  it('excludes pull_request body', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
@@ -181,8 +243,6 @@ describe('input-helper tests', () => {
     inputs.excludeDescription = 'true'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
-    expect(checkerArguments.pattern).toBe('some-pattern')
-    expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages[0]).toBe('some-title')
   })
@@ -202,8 +262,6 @@ describe('input-helper tests', () => {
     inputs.excludeTitle = 'true'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
-    expect(checkerArguments.pattern).toBe('some-pattern')
-    expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages[0]).toBe('some-body')
   })
@@ -224,41 +282,214 @@ describe('input-helper tests', () => {
     inputs.excludeTitle = 'true'
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
-    expect(checkerArguments.pattern).toBe('some-pattern')
-    expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
     expect(checkerArguments.messages.length).toBe(0)
   })
 
-  it('should check pull_request commits', async () => {
+  it('requires accessToken', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: ''
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'The `checkAllCommitMessaages` option requires a github access token.'
+    )
+  })
+
+  it('requires pull_request number', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: ''
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = 'dummy-token'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No number found in the pull_request.'
+    )
+  })
+
+  it('requires repository', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: '',
+          number: 12345
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = 'dummy-token'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No repository found in the payload.'
+    )
+  })
+
+  it('requires repository name', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: '',
+          number: 12345
+        },
+        repository: {}
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = 'dummy-token'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No name found in the repository.'
+    )
+  })
+
+  it('requires repository owner (1)', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: '',
+          number: 12345
+        },
+        repository: {
+          name: 'repository-name'
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = 'dummy-token'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No owner found in the repository.'
+    )
+  })
+
+  it('requires repository owner (2)', async () => {
+    mockGitHub.context = {
+      eventName: 'pull_request',
+      payload: {
+        pull_request: {
+          title: 'some-title',
+          body: '',
+          number: 12345
+        },
+        repository: {
+          name: 'repository-name',
+          owner: {}
+        }
+      }
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    inputs.checkAllCommitMessages = 'true'
+    inputs.accessToken = 'dummy-token'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No owner found in the repository.'
+    )
+  })
+
+  it('sets pull_request commits', async () => {
     mockGitHub.context = {
       eventName: 'pull_request',
       payload: {
         pull_request: {
           title: 'some-title',
           body: 'some-body',
-          number: 62 // This pull request has exactly two commits
+          number: 1
         },
         repository: {
           owner: {
-            name: 'TotalCross'
+            name: 'some-owner'
           },
-          name: 'totalcross'
+          name: 'some-repo'
         }
       }
     }
+
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
     inputs.excludeDescription = 'true'
     inputs.excludeTitle = 'true'
     inputs.checkAllCommitMessages = 'true'
-    inputs.accessToken = process.env.ACCESS_TOKEN
+    inputs.accessToken = 'some-token'
+
+    const response = {
+      repository: {
+        pullRequest: {
+          commits: {
+            edges: [
+              {
+                node: {
+                  commit: {
+                    message:
+                      'input: make input-helper functions async\n\nIn order to work with asynchronous call like an async http request\nin an easier way, the functions getInput and getMessages were\nconverted to async.'
+                  }
+                }
+              },
+              {
+                node: {
+                  commit: {
+                    message:
+                      "input: PR options ignore title and check PR commits\n\nthis make it possible to igore partially or completely the PR payload.\nThe commits associated with the pull request can be checked instead of\nchecking the pull request payload. The parameter are:\n\n- excludeTitle: 'true | false'\n- excludeDescription: 'true | false'\n- checkAllCommitMessages: 'true | false'\n\nby default, all options comes false."
+                  }
+                }
+              },
+              {
+                node: {
+                  commit: {
+                    message:
+                      'docs: include parameters excludeTitle, checkAllCommitMessages and accessToken\n\nCo-authored-by: Gilbertsoft <25326036+gilbertsoft@users.noreply.github.com>'
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+
+    graphqlResponse = response
+
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
-    expect(checkerArguments.messages.length).toBe(2)
+    expect(checkerArguments.messages.length).toBe(3)
+  })
+
+  it('require push payload', async () => {
+    mockGitHub.context = {
+      eventName: 'push'
+    }
+    inputs.pattern = 'some-pattern'
+    inputs.error = 'some-error'
+    await expect(inputHelper.getInputs()).rejects.toThrow(
+      'No payload found in the context.'
+    )
   })
 
   it('push payload is optional', async () => {
