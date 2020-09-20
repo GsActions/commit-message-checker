@@ -17,7 +17,11 @@ jobs:
         run: |
           npm install
           npm run all
-
+      - name: Verify dist files
+        run: |
+          git diff
+          # This fails when dist files are not up to date
+          test -z "$(git diff --shortstat 2> /dev/null | tail -n1)"
   test: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:

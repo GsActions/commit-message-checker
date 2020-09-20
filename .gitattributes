@@ -1,0 +1,5 @@
+# Enforce checkout with linux lf consistent over all plattforms
+*.js text eol=lf
+*.json text eol=lf
+*.ts text eol=lf
+*.yml text eol=lf
