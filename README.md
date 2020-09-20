@@ -23,7 +23,9 @@ More information about `pattern` and `flags` can be found in the
 
 `flags` is optional and defaults to `gm`.
 
-`excludeDescription`, `excludeTitle` and `checkAllCommitMessages` are optional. Default behavior is to include the description and title and not check pull request commit messages.
+`excludeDescription`, `excludeTitle` and `checkAllCommitMessages` are optional.
+Default behavior is to include the description and title and not check pull
+request commit messages.
 
 ### Example Workflow
 
