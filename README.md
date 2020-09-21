@@ -115,6 +115,13 @@ Runs Jest test suites.
 
 Runs all of the above commands.
 
+### Debugging
+
+More information about debugging Github Actions can be found at <https://github.com/actions/toolkit/blob/main/docs/action-debugging.md>.
+
+The secrets `ACTIONS_STEP_DEBUG` and `ACTIONS_RUNNER_DEBUG` are both set to
+`true` in the main repository.
+
 ## License
 
 This project is released under the terms of the [MIT License](LICENSE)
