@@ -40,7 +40,7 @@ on:
       - synchronize
   push:
     branches:
-      - master
+      - main
       - 'releases/*'
 
 jobs:
