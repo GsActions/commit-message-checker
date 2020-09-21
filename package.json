@@ -1,6 +1,6 @@
 {
   "name": "@gsactions/commit-message-checker",
-  "version": "0.3.0",
+  "version": "2.0.0-dev.0",
   "description": "GitHub Action that checks commit messages of pushes and pull request against a regex pattern",
   "keywords": [
     "github",
