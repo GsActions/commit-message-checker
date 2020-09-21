@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
-      - name: Build & Test
-        env:
-          ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install
         run: |
           npm install
+      - name: Build and Test
+        run: |
           npm run all
       - name: Verify dist files
         run: |
