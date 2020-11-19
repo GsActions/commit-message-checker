@@ -4869,7 +4869,7 @@ function getMessages(pullRequestOptions) {
                 // Handle pull request commits
                 if (pullRequestOptions.checkAllCommitMessages) {
                     if (!pullRequestOptions.accessToken) {
-                        throw new Error('The `checkAllCommitMessaages` option requires a github access token.');
+                        throw new Error('The `checkAllCommitMessages` option requires a github access token.');
                     }
                     if (!github.context.payload.pull_request.number) {
                         throw new Error('No number found in the pull_request.');
