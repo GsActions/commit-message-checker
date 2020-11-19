@@ -145,7 +145,7 @@ async function getMessages(
       if (pullRequestOptions.checkAllCommitMessages) {
         if (!pullRequestOptions.accessToken) {
           throw new Error(
-            'The `checkAllCommitMessaages` option requires a github access token.'
+            'The `checkAllCommitMessages` option requires a github access token.'
           )
         }
 
