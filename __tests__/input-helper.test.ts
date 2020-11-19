@@ -300,7 +300,7 @@ describe('input-helper tests', () => {
     inputs.error = 'some-error'
     inputs.checkAllCommitMessages = 'true'
     await expect(inputHelper.getInputs()).rejects.toThrow(
-      'The `checkAllCommitMessaages` option requires a github access token.'
+      'The `checkAllCommitMessages` option requires a github access token.'
     )
   })
 
