@@ -38,6 +38,12 @@ on:
       - edited
       - reopened
       - synchronize
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - reopened
+      - synchronize
   push:
     branches:
       - main
