@@ -4902,6 +4902,7 @@ function getMessages(pullRequestOptions) {
         const messages = [];
         core.debug(` - eventName: ${github.context.eventName}`);
         switch (github.context.eventName) {
+            case 'pull_request_target':
             case 'pull_request': {
                 if (!github.context.payload) {
                     throw new Error('No payload found in the context.');
