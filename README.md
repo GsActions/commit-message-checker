@@ -3,15 +3,15 @@
 ![Version](https://img.shields.io/github/v/release/gsactions/commit-message-checker?style=flat-square)
 ![Test](https://github.com/gsactions/commit-message-checker/workflows/build-test/badge.svg)
 
-A GitHub action that checks that commit messages match a regex patter. The
+A GitHub action that checks that commit messages match a regex pattern. The
 action is able to act on pull request and push events and check the pull
-request title and body or the commit message of the commits of a push.
+request title and body, or the commit message of the commits of a push.
 
-On pull requests the title and body are concatenated delimited by two line
+On pull requests the title and body are concatenated, delimited by two line
 breaks.
 
-Designed to be very flexible in usage you can split checks into various
-workflows, using action types on pull request to listen on, define branches
+Designed to be very flexible in usage, you can split checks into various
+workflows, use action types on pull request to listen on, define branches
 for pushes etc. etc.
 
 ## Configuration
@@ -119,11 +119,11 @@ Runs Jest test suites.
 
 #### `npm run all`
 
-Runs all of the above commands.
+Runs all the above commands.
 
 ### Debugging
 
-More information about debugging Github Actions can be found at <https://github.com/actions/toolkit/blob/main/docs/action-debugging.md>.
+More information about debugging GitHub Actions can be found at <https://github.com/actions/toolkit/blob/main/docs/action-debugging.md>.
 
 The secrets `ACTIONS_STEP_DEBUG` and `ACTIONS_RUNNER_DEBUG` are both set to
 `true` in the main repository.
