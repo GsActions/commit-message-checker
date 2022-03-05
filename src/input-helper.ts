@@ -251,6 +251,7 @@ async function getCommitMessagesFromPullRequest(
   }
 `
   const variables = {
+    baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
     repositoryOwner: repositoryOwner,
     repositoryName: repositoryName,
     pullRequestNumber: pullRequestNumber,
