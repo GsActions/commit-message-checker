@@ -76,6 +76,22 @@ jobs:
           error: 'You need at least one "Resolves|Fixes: #<issue number>" line.'
 ```
 
+### Troubleshooting and debugging
+
+Most of the questions being asked here are not about bugs or missing features in
+this action, but about not enough information about what is going on in the
+background. A good first starting point is to [enable debug logging](https://docs.github.com/en/actions/monitoring-and-troubleshooting-workflows/enabling-debug-logging)
+for the action, which can be accomplished by adding secrets to your repository.
+After that, many additional information will appear in the logs and you should
+be able to set up your configuration properly.
+
+There are some really good tools that you can use to set up your pattern
+properly for your needs. My favorite tool is <https://regexr.com/> which works
+very well with this action.
+
+If you need additional support, please head to the [GitHub Discussions](https://github.com/GsActions/commit-message-checker/discussions)
+of this repository.
+
 ## Development
 
 ### Quick Start
