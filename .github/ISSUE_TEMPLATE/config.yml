@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🚑 Community support
+    url: https://github.com/GsActions/commit-message-checker/discussions
+    about: Please ask and answer questions here.
