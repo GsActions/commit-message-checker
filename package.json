@@ -37,7 +37,7 @@
     "all": "npm run build && npm run format && npm run lint && npm run pack && npm test"
   },
   "dependencies": {
-    "@actions/core": "^1.4.0",
+    "@actions/core": "^1.9.1",
     "@actions/github": "^4.0.0",
     "@octokit/graphql": "^4.6.4"
   },
