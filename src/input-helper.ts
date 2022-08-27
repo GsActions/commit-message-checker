@@ -241,7 +241,10 @@ async function getCommitMessagesFromPullRequest(
           edges {
             node {
               commit {
-                message
+                message,
+                parents(last: 1) {
+                  totalCount
+                }
               }
             }
           }
@@ -267,6 +270,9 @@ async function getCommitMessagesFromPullRequest(
     node: {
       commit: {
         message: string
+        parents: {
+          totalCount: number
+        }
       }
     }
   }
@@ -289,11 +295,17 @@ async function getCommitMessagesFromPullRequest(
   let messages: string[] = []
 
   if (repository.pullRequest) {
-    messages = repository.pullRequest.commits.edges.map(function (
-      edge: CommitEdgeItem
-    ): string {
-      return edge.node.commit.message
-    })
+    messages = repository.pullRequest.commits.edges
+      .filter(function (edge: CommitEdgeItem): boolean {
+        if (edge.node.commit.parents.totalCount > 1) {
+          // Skip merge commits (which have more than 1 parent commit)
+          return false
+        }
+        return true
+      })
+      .map(function (edge: CommitEdgeItem): string {
+        return edge.node.commit.message
+      })
   }
 
   return messages
