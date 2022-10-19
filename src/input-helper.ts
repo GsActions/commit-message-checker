@@ -1,7 +1,7 @@
 /*
  * This file is part of the "GS Commit Message Checker" Action for Github.
  *
- * Copyright (C) 2019 by Gilbertsoft LLC (gilbertsoft.org)
+ * Copyright (C) 2019-2022 by Gilbertsoft LLC (gilbertsoft.org)
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -36,7 +36,7 @@ export interface PullRequestOptions {
  * @returns   ICheckerArguments
  */
 export async function getInputs(): Promise<ICheckerArguments> {
-  const result = ({} as unknown) as ICheckerArguments
+  const result = {} as unknown as ICheckerArguments
 
   core.debug('Get inputs...')
 
@@ -178,7 +178,7 @@ async function getMessages(
           github.context.payload.pull_request.number
         )
 
-        for (const message of commitMessages) {
+        for (message of commitMessages) {
           if (message) {
             messages.push(message)
           }
@@ -252,9 +252,9 @@ async function getCommitMessagesFromPullRequest(
 `
   const variables = {
     baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
-    repositoryOwner: repositoryOwner,
-    repositoryName: repositoryName,
-    pullRequestNumber: pullRequestNumber,
+    repositoryOwner,
+    repositoryName,
+    pullRequestNumber,
     headers: {
       authorization: `token ${accessToken}`
     }
@@ -263,13 +263,7 @@ async function getCommitMessagesFromPullRequest(
   core.debug(` - query: ${query}`)
   core.debug(` - variables: ${JSON.stringify(variables, null, 2)}`)
 
-  const {repository} = await graphql(query, variables)
-
-  core.debug(` - response: ${JSON.stringify(repository, null, 2)}`)
-
-  let messages: string[] = []
-
-  interface EdgeItem {
+  interface CommitEdgeItem {
     node: {
       commit: {
         message: string
@@ -277,9 +271,26 @@ async function getCommitMessagesFromPullRequest(
     }
   }
 
+  interface RepositoryResponseData {
+    repository: {
+      pullRequest: {
+        commits: {
+          edges: [CommitEdgeItem]
+        }
+      }
+    }
+  }
+
+  const response = await graphql<RepositoryResponseData>(query, variables)
+  const repository = response.repository
+
+  core.debug(` - response: ${JSON.stringify(repository, null, 2)}`)
+
+  let messages: string[] = []
+
   if (repository.pullRequest) {
-    messages = repository.pullRequest.commits.edges.map(function(
-      edge: EdgeItem
+    messages = repository.pullRequest.commits.edges.map(function (
+      edge: CommitEdgeItem
     ): string {
       return edge.node.commit.message
     })
