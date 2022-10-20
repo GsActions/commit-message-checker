@@ -236,7 +236,7 @@ exports.getInputs = getInputs;
  * @returns   string[]
  */
 function getMessages(pullRequestOptions) {
-    var _a, _b, _c;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages...');
         core.debug(` - pullRequestOptions: ${JSON.stringify(pullRequestOptions, null, 2)}`);
@@ -310,10 +310,21 @@ function getMessages(pullRequestOptions) {
                     core.debug(' - skipping commits');
                     break;
                 }
+                if (!github.context.payload.repository) {
+                    throw new Error('No repository found in the payload.');
+                }
+                if (!github.context.payload.repository.name) {
+                    throw new Error('No name found in the repository.');
+                }
+                if (!github.context.payload.repository.owner ||
+                    (!github.context.payload.repository.owner.login &&
+                        !github.context.payload.repository.owner.name)) {
+                    throw new Error('No owner found in the repository.');
+                }
                 for (const i in github.context.payload.commits) {
                     if (github.context.payload.commits[i].message &&
                         // ignore merge commits
-                        ((_c = (_b = github.context.payload.commits[i].parents) === null || _b === void 0 ? void 0 : _b.totalCount) !== null && _c !== void 0 ? _c : 1) === 1) {
+                        !(yield isMergeCommit(pullRequestOptions.accessToken, (_b = github.context.payload.repository.owner.name) !== null && _b !== void 0 ? _b : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.commits[i].id))) {
                         messages.push(github.context.payload.commits[i].message);
                     }
                 }
@@ -384,6 +395,47 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
             });
         }
         return messages;
+    });
+}
+function isMergeCommit(accessToken, repositoryOwner, repositoryName, commitSha) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.debug('Get messages from pull request...');
+        core.debug(` - accessToken: ${accessToken}`);
+        core.debug(` - repositoryOwner: ${repositoryOwner}`);
+        core.debug(` - repositoryName: ${repositoryName}`);
+        core.debug(` - commitSha: ${commitSha}`);
+        const query = `
+  query commit(
+    $repositoryOwner: String!,
+    $repositoryName: String!,
+    $commitSha: GitObjectID!
+  ) {
+    repository(owner: $repositoryOwner, name: $repositoryName) {
+      object(oid: $commitSha) {
+        ... on Commit {
+          message
+          parents(last: 1) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`;
+        const variables = {
+            baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
+            repositoryOwner,
+            repositoryName,
+            commitSha,
+            headers: {
+                authorization: `token ${accessToken}`
+            }
+        };
+        core.debug(` - query: ${query}`);
+        core.debug(` - variables: ${JSON.stringify(variables, null, 2)}`);
+        const response = yield (0, graphql_1.graphql)(query, variables);
+        core.debug(` - response: ${JSON.stringify(response, null, 2)}`);
+        return response.repository.object.parents.totalCount > 1;
     });
 }
 

@@ -1,7 +1,7 @@
 /*
  * This file is part of the "GS Commit Message Checker" Action for Github.
  *
- * Copyright (C) 2019 by Gilbertsoft LLC (gilbertsoft.org)
+ * Copyright (C) 2019-2022 by Gilbertsoft LLC (gilbertsoft.org)
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
@@ -40,10 +40,19 @@ const mockGitHub = jest.genMockFromModule('@actions/github') as any
 mockGitHub.context = {}
 
 // Mock @octokit/graphql
+interface IGraphqlResponseGetter {
+  (parameters?: any): any
+}
 let graphqlResponse = {} as any
+
+function defaultGraphqlResponseGetter(parameters?: any): any {
+  return graphqlResponse
+}
+
+let getGraphqlResponse: IGraphqlResponseGetter = defaultGraphqlResponseGetter
 const mockGraphql = jest.genMockFromModule('@octokit/graphql') as any
 mockGraphql.graphql = (query: string, parameters?: any): any => {
-  return graphqlResponse
+  return getGraphqlResponse(parameters)
 }
 
 describe('input-helper tests', () => {
@@ -62,6 +71,7 @@ describe('input-helper tests', () => {
     inputs = {}
     mockGitHub.context = {}
     graphqlResponse = {}
+    getGraphqlResponse = defaultGraphqlResponseGetter
   })
 
   afterAll(() => {
@@ -541,13 +551,35 @@ describe('input-helper tests', () => {
       payload: {
         commits: [
           {
+            id: '1',
             message: 'some-message'
           }
-        ]
+        ],
+        repository: {
+          owner: {
+            name: 'some-owner'
+          },
+          name: 'some-repo'
+        }
       }
     }
+
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
+
+    const response = {
+      repository: {
+        object: {
+          message: 'some-message',
+          parents: {
+            totalCount: 1
+          }
+        }
+      }
+    }
+
+    graphqlResponse = response
+
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')
@@ -563,22 +595,55 @@ describe('input-helper tests', () => {
       payload: {
         commits: [
           {
+            id: '1',
             message: 'some-message'
           },
           {
+            id: '2',
             message: 'other-message'
           },
           {
-            message: 'ignored-message',
-            parents: {
-              totalCount: 2
-            }
+            id: '3',
+            message: 'ignored-message'
           }
-        ]
+        ],
+        repository: {
+          owner: {
+            name: 'some-owner'
+          },
+          name: 'some-repo'
+        }
       }
     }
+
     inputs.pattern = 'some-pattern'
     inputs.error = 'some-error'
+
+    getGraphqlResponse = (parameters?: any): any => {
+      if (parameters.commitSha === '3') {
+        return {
+          repository: {
+            object: {
+              message: 'ignored-message',
+              parents: {
+                totalCount: 2
+              }
+            }
+          }
+        }
+      }
+
+      return {
+        repository: {
+          object: {
+            parents: {
+              totalCount: 1
+            }
+          }
+        }
+      }
+    }
+
     const checkerArguments: ICheckerArguments = await inputHelper.getInputs()
     expect(checkerArguments).toBeTruthy()
     expect(checkerArguments.pattern).toBe('some-pattern')

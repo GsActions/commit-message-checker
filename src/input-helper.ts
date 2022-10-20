@@ -200,11 +200,33 @@ async function getMessages(
         break
       }
 
+      if (!github.context.payload.repository) {
+        throw new Error('No repository found in the payload.')
+      }
+
+      if (!github.context.payload.repository.name) {
+        throw new Error('No name found in the repository.')
+      }
+
+      if (
+        !github.context.payload.repository.owner ||
+        (!github.context.payload.repository.owner.login &&
+          !github.context.payload.repository.owner.name)
+      ) {
+        throw new Error('No owner found in the repository.')
+      }
+
       for (const i in github.context.payload.commits) {
         if (
           github.context.payload.commits[i].message &&
           // ignore merge commits
-          (github.context.payload.commits[i].parents?.totalCount ?? 1) === 1
+          !(await isMergeCommit(
+            pullRequestOptions.accessToken,
+            github.context.payload.repository.owner.name ??
+              github.context.payload.repository.owner.login,
+            github.context.payload.repository.name,
+            github.context.payload.commits[i].id
+          ))
         ) {
           messages.push(github.context.payload.commits[i].message)
         }
@@ -310,4 +332,65 @@ async function getCommitMessagesFromPullRequest(
   }
 
   return messages
+}
+
+async function isMergeCommit(
+  accessToken: string,
+  repositoryOwner: string,
+  repositoryName: string,
+  commitSha: string
+): Promise<boolean> {
+  core.debug('Get messages from pull request...')
+  core.debug(` - accessToken: ${accessToken}`)
+  core.debug(` - repositoryOwner: ${repositoryOwner}`)
+  core.debug(` - repositoryName: ${repositoryName}`)
+  core.debug(` - commitSha: ${commitSha}`)
+
+  const query = `
+  query commit(
+    $repositoryOwner: String!,
+    $repositoryName: String!,
+    $commitSha: GitObjectID!
+  ) {
+    repository(owner: $repositoryOwner, name: $repositoryName) {
+      object(oid: $commitSha) {
+        ... on Commit {
+          message
+          parents(last: 1) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`
+  const variables = {
+    baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
+    repositoryOwner,
+    repositoryName,
+    commitSha,
+    headers: {
+      authorization: `token ${accessToken}`
+    }
+  }
+
+  core.debug(` - query: ${query}`)
+  core.debug(` - variables: ${JSON.stringify(variables, null, 2)}`)
+
+  interface CommitResponseData {
+    repository: {
+      object: {
+        message: string
+        parents: {
+          totalCount: number
+        }
+      }
+    }
+  }
+
+  const response = await graphql<CommitResponseData>(query, variables)
+
+  core.debug(` - response: ${JSON.stringify(response, null, 2)}`)
+
+  return response.repository.object.parents.totalCount > 1
 }
