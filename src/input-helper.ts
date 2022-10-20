@@ -301,11 +301,8 @@ async function getCommitMessagesFromPullRequest(
   if (repository.pullRequest) {
     messages = repository.pullRequest.commits.edges
       .filter(function (edge: CommitEdgeItem): boolean {
-        if (edge.node.commit.parents.totalCount > 1) {
-          // Skip merge commits (which have more than 1 parent commit)
-          return false
-        }
-        return true
+        // Skip merge commits (which have more than 1 parent commit)
+        return edge.node.commit.parents.totalCount === 1
       })
       .map(function (edge: CommitEdgeItem): string {
         return edge.node.commit.message
