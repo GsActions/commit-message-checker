@@ -236,7 +236,7 @@ exports.getInputs = getInputs;
  * @returns   string[]
  */
 function getMessages(pullRequestOptions) {
-    var _a;
+    var _a, _b, _c;
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages...');
         core.debug(` - pullRequestOptions: ${JSON.stringify(pullRequestOptions, null, 2)}`);
@@ -311,7 +311,9 @@ function getMessages(pullRequestOptions) {
                     break;
                 }
                 for (const i in github.context.payload.commits) {
-                    if (github.context.payload.commits[i].message) {
+                    if (github.context.payload.commits[i].message &&
+                        // ignore merge commits
+                        ((_c = (_b = github.context.payload.commits[i].parents) === null || _b === void 0 ? void 0 : _b.totalCount) !== null && _c !== void 0 ? _c : 1) === 1) {
                         messages.push(github.context.payload.commits[i].message);
                     }
                 }

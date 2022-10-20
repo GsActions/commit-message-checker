@@ -201,7 +201,11 @@ async function getMessages(
       }
 
       for (const i in github.context.payload.commits) {
-        if (github.context.payload.commits[i].message) {
+        if (
+          github.context.payload.commits[i].message &&
+          // ignore merge commits
+          (github.context.payload.commits[i].parents?.totalCount ?? 1) === 1
+        ) {
           messages.push(github.context.payload.commits[i].message)
         }
       }

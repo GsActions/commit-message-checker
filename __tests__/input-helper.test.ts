@@ -553,6 +553,7 @@ describe('input-helper tests', () => {
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages.length).toBe(1)
     expect(checkerArguments.messages[0]).toBe('some-message')
   })
 
@@ -566,6 +567,12 @@ describe('input-helper tests', () => {
           },
           {
             message: 'other-message'
+          },
+          {
+            message: 'ignored-message',
+            parents: {
+              totalCount: 2
+            }
           }
         ]
       }
@@ -577,6 +584,7 @@ describe('input-helper tests', () => {
     expect(checkerArguments.pattern).toBe('some-pattern')
     expect(checkerArguments.error).toBe('some-error')
     expect(checkerArguments.messages).toBeTruthy()
+    expect(checkerArguments.messages.length).toBe(2)
     expect(checkerArguments.messages[0]).toBe('some-message')
     expect(checkerArguments.messages[1]).toBe('other-message')
   })
