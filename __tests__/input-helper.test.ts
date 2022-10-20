@@ -445,7 +445,10 @@ describe('input-helper tests', () => {
                 node: {
                   commit: {
                     message:
-                      'input: make input-helper functions async\n\nIn order to work with asynchronous call like an async http request\nin an easier way, the functions getInput and getMessages were\nconverted to async.'
+                      'input: make input-helper functions async\n\nIn order to work with asynchronous call like an async http request\nin an easier way, the functions getInput and getMessages were\nconverted to async.',
+                    parents: {
+                      totalCount: 1
+                    }
                   }
                 }
               },
@@ -453,7 +456,10 @@ describe('input-helper tests', () => {
                 node: {
                   commit: {
                     message:
-                      "input: PR options ignore title and check PR commits\n\nthis make it possible to igore partially or completely the PR payload.\nThe commits associated with the pull request can be checked instead of\nchecking the pull request payload. The parameter are:\n\n- excludeTitle: 'true | false'\n- excludeDescription: 'true | false'\n- checkAllCommitMessages: 'true | false'\n\nby default, all options comes false."
+                      "input: PR options ignore title and check PR commits\n\nthis make it possible to igore partially or completely the PR payload.\nThe commits associated with the pull request can be checked instead of\nchecking the pull request payload. The parameter are:\n\n- excludeTitle: 'true | false'\n- excludeDescription: 'true | false'\n- checkAllCommitMessages: 'true | false'\n\nby default, all options comes false.",
+                    parents: {
+                      totalCount: 1
+                    }
                   }
                 }
               },
@@ -461,7 +467,20 @@ describe('input-helper tests', () => {
                 node: {
                   commit: {
                     message:
-                      'docs: include parameters excludeTitle, checkAllCommitMessages and accessToken\n\nCo-authored-by: Gilbertsoft <25326036+gilbertsoft@users.noreply.github.com>'
+                      'docs: include parameters excludeTitle, checkAllCommitMessages and accessToken\n\nCo-authored-by: Gilbertsoft <25326036+gilbertsoft@users.noreply.github.com>',
+                    parents: {
+                      totalCount: 1
+                    }
+                  }
+                }
+              },
+              {
+                node: {
+                  commit: {
+                    message: 'merge: merge commit to be ignored',
+                    parents: {
+                      totalCount: 2
+                    }
                   }
                 }
               }
