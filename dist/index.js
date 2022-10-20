@@ -344,7 +344,10 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
           edges {
             node {
               commit {
-                message
+                message,
+                parents(last: 1) {
+                  totalCount
+                }
               }
             }
           }
@@ -369,7 +372,15 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
         if (repository.pullRequest) {
-            messages = repository.pullRequest.commits.edges.map(function (edge) {
+            messages = repository.pullRequest.commits.edges
+                .filter(function (edge) {
+                if (edge.node.commit.parents.totalCount > 1) {
+                    // Skip merge commits (which have more than 1 parent commit)
+                    return false;
+                }
+                return true;
+            })
+                .map(function (edge) {
                 return edge.node.commit.message;
             });
         }
