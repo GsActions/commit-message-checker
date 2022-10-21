@@ -26,6 +26,7 @@ import {ICheckerArguments} from './commit-message-checker'
 export interface PullRequestOptions {
   ignoreTitle: boolean
   ignoreDescription: boolean
+  ignoreMergeCommits: boolean // requires github token
   checkAllCommitMessages: boolean // requires github token
   accessToken: string
 }
@@ -60,6 +61,10 @@ export async function getInputs(): Promise<ICheckerArguments> {
   const excludeDescriptionStr = core.getInput('excludeDescription')
   core.debug(`excludeDescription: ${excludeDescriptionStr}`)
 
+  // Get excludeMergeCommits
+  const excludeMergeCommitsStr = core.getInput('excludeMergeCommits')
+  core.debug(`excludeDescription: ${excludeMergeCommitsStr}`)
+
   // Get checkAllCommitMessages
   const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages')
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
@@ -71,6 +76,9 @@ export async function getInputs(): Promise<ICheckerArguments> {
       : /* default */ false,
     ignoreDescription: excludeDescriptionStr
       ? excludeDescriptionStr === 'true'
+      : /* default */ false,
+    ignoreMergeCommits: excludeMergeCommitsStr
+      ? excludeMergeCommitsStr === 'true'
       : /* default */ false,
     checkAllCommitMessages: checkAllCommitMessagesStr
       ? checkAllCommitMessagesStr === 'true'
@@ -175,7 +183,8 @@ async function getMessages(
           github.context.payload.repository.owner.name ??
             github.context.payload.repository.owner.login,
           github.context.payload.repository.name,
-          github.context.payload.pull_request.number
+          github.context.payload.pull_request.number,
+          pullRequestOptions.ignoreMergeCommits
         )
 
         for (message of commitMessages) {
@@ -216,18 +225,33 @@ async function getMessages(
         throw new Error('No owner found in the repository.')
       }
 
+      if (pullRequestOptions.ignoreMergeCommits) {
+        if (!pullRequestOptions.accessToken) {
+          throw new Error(
+            'The `excludeMergeCommits` option requires a github access token.'
+          )
+        }
+      }
+
       for (const i in github.context.payload.commits) {
-        if (
-          github.context.payload.commits[i].message &&
-          // ignore merge commits
-          !(await isMergeCommit(
-            pullRequestOptions.accessToken,
-            github.context.payload.repository.owner.name ??
-              github.context.payload.repository.owner.login,
-            github.context.payload.repository.name,
-            github.context.payload.commits[i].id
-          ))
-        ) {
+        if (github.context.payload.commits[i].message) {
+          // ignore merge commits if requested
+          if (
+            pullRequestOptions.ignoreMergeCommits &&
+            (await isMergeCommit(
+              pullRequestOptions.accessToken,
+              github.context.payload.repository.owner.name ??
+                github.context.payload.repository.owner.login,
+              github.context.payload.repository.name,
+              github.context.payload.commits[i].id
+            ))
+          ) {
+            core.debug(
+              ` - skipping merge commit ${github.context.payload.commits[i].id}`
+            )
+            continue
+          }
+
           messages.push(github.context.payload.commits[i].message)
         }
       }
@@ -246,7 +270,8 @@ async function getCommitMessagesFromPullRequest(
   accessToken: string,
   repositoryOwner: string,
   repositoryName: string,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  ignoreMergeCommits: boolean
 ): Promise<string[]> {
   core.debug('Get messages from pull request...')
   core.debug(` - accessToken: ${accessToken}`)
@@ -324,7 +349,7 @@ async function getCommitMessagesFromPullRequest(
     messages = repository.pullRequest.commits.edges
       .filter(function (edge: CommitEdgeItem): boolean {
         // Skip merge commits (which have more than 1 parent commit)
-        return edge.node.commit.parents.totalCount === 1
+        return !ignoreMergeCommits || edge.node.commit.parents.totalCount === 1
       })
       .map(function (edge: CommitEdgeItem): string {
         return edge.node.commit.message
