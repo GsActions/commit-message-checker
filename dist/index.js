@@ -206,6 +206,9 @@ function getInputs() {
         // Get excludeDescription
         const excludeDescriptionStr = core.getInput('excludeDescription');
         core.debug(`excludeDescription: ${excludeDescriptionStr}`);
+        // Get excludeMergeCommits
+        const excludeMergeCommitsStr = core.getInput('excludeMergeCommits');
+        core.debug(`excludeDescription: ${excludeMergeCommitsStr}`);
         // Get checkAllCommitMessages
         const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages');
         core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`);
@@ -216,6 +219,9 @@ function getInputs() {
                 : /* default */ false,
             ignoreDescription: excludeDescriptionStr
                 ? excludeDescriptionStr === 'true'
+                : /* default */ false,
+            ignoreMergeCommits: excludeMergeCommitsStr
+                ? excludeMergeCommitsStr === 'true'
                 : /* default */ false,
             checkAllCommitMessages: checkAllCommitMessagesStr
                 ? checkAllCommitMessagesStr === 'true'
@@ -236,7 +242,7 @@ exports.getInputs = getInputs;
  * @returns   string[]
  */
 function getMessages(pullRequestOptions) {
-    var _a;
+    var _a, _b;
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages...');
         core.debug(` - pullRequestOptions: ${JSON.stringify(pullRequestOptions, null, 2)}`);
@@ -292,7 +298,7 @@ function getMessages(pullRequestOptions) {
                             !github.context.payload.repository.owner.name)) {
                         throw new Error('No owner found in the repository.');
                     }
-                    const commitMessages = yield getCommitMessagesFromPullRequest(pullRequestOptions.accessToken, (_a = github.context.payload.repository.owner.name) !== null && _a !== void 0 ? _a : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.pull_request.number);
+                    const commitMessages = yield getCommitMessagesFromPullRequest(pullRequestOptions.accessToken, (_a = github.context.payload.repository.owner.name) !== null && _a !== void 0 ? _a : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.pull_request.number, pullRequestOptions.ignoreMergeCommits);
                     for (message of commitMessages) {
                         if (message) {
                             messages.push(message);
@@ -310,8 +316,30 @@ function getMessages(pullRequestOptions) {
                     core.debug(' - skipping commits');
                     break;
                 }
+                if (!github.context.payload.repository) {
+                    throw new Error('No repository found in the payload.');
+                }
+                if (!github.context.payload.repository.name) {
+                    throw new Error('No name found in the repository.');
+                }
+                if (!github.context.payload.repository.owner ||
+                    (!github.context.payload.repository.owner.login &&
+                        !github.context.payload.repository.owner.name)) {
+                    throw new Error('No owner found in the repository.');
+                }
+                if (pullRequestOptions.ignoreMergeCommits) {
+                    if (!pullRequestOptions.accessToken) {
+                        throw new Error('The `excludeMergeCommits` option requires a github access token.');
+                    }
+                }
                 for (const i in github.context.payload.commits) {
                     if (github.context.payload.commits[i].message) {
+                        // ignore merge commits if requested
+                        if (pullRequestOptions.ignoreMergeCommits &&
+                            (yield isMergeCommit(pullRequestOptions.accessToken, (_b = github.context.payload.repository.owner.name) !== null && _b !== void 0 ? _b : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.commits[i].id))) {
+                            core.debug(` - skipping merge commit ${github.context.payload.commits[i].id}`);
+                            continue;
+                        }
                         messages.push(github.context.payload.commits[i].message);
                     }
                 }
@@ -324,7 +352,7 @@ function getMessages(pullRequestOptions) {
         return messages;
     });
 }
-function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber) {
+function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber, ignoreMergeCommits) {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages from pull request...');
         core.debug(` - accessToken: ${accessToken}`);
@@ -344,7 +372,10 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
           edges {
             node {
               commit {
-                message
+                message,
+                parents(last: 1) {
+                  totalCount
+                }
               }
             }
           }
@@ -369,11 +400,57 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
         if (repository.pullRequest) {
-            messages = repository.pullRequest.commits.edges.map(function (edge) {
+            messages = repository.pullRequest.commits.edges
+                .filter(function (edge) {
+                // Skip merge commits (which have more than 1 parent commit)
+                return !ignoreMergeCommits || edge.node.commit.parents.totalCount === 1;
+            })
+                .map(function (edge) {
                 return edge.node.commit.message;
             });
         }
         return messages;
+    });
+}
+function isMergeCommit(accessToken, repositoryOwner, repositoryName, commitSha) {
+    return __awaiter(this, void 0, void 0, function* () {
+        core.debug('Get messages from pull request...');
+        core.debug(` - accessToken: ${accessToken}`);
+        core.debug(` - repositoryOwner: ${repositoryOwner}`);
+        core.debug(` - repositoryName: ${repositoryName}`);
+        core.debug(` - commitSha: ${commitSha}`);
+        const query = `
+  query commit(
+    $repositoryOwner: String!,
+    $repositoryName: String!,
+    $commitSha: GitObjectID!
+  ) {
+    repository(owner: $repositoryOwner, name: $repositoryName) {
+      object(oid: $commitSha) {
+        ... on Commit {
+          message
+          parents(last: 1) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`;
+        const variables = {
+            baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
+            repositoryOwner,
+            repositoryName,
+            commitSha,
+            headers: {
+                authorization: `token ${accessToken}`
+            }
+        };
+        core.debug(` - query: ${query}`);
+        core.debug(` - variables: ${JSON.stringify(variables, null, 2)}`);
+        const response = yield (0, graphql_1.graphql)(query, variables);
+        core.debug(` - response: ${JSON.stringify(response, null, 2)}`);
+        return response.repository.object.parents.totalCount > 1;
     });
 }
 

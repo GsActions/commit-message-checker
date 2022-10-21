@@ -20,6 +20,10 @@ inputs:
     description: 'Setting this input to true will exclude the Pull Request description from the check.'
     required: false
     default: 'false'
+  excludeMergeCommits:
+    description: 'Setting this input to true will exclude merge commits from the check.'
+    required: false
+    default: 'false'
   checkAllCommitMessages:
     description: 'Setting this input to true will check all Pull Request commits'
     required: false

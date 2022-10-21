@@ -26,6 +26,7 @@ import {ICheckerArguments} from './commit-message-checker'
 export interface PullRequestOptions {
   ignoreTitle: boolean
   ignoreDescription: boolean
+  ignoreMergeCommits: boolean // requires github token
   checkAllCommitMessages: boolean // requires github token
   accessToken: string
 }
@@ -60,6 +61,10 @@ export async function getInputs(): Promise<ICheckerArguments> {
   const excludeDescriptionStr = core.getInput('excludeDescription')
   core.debug(`excludeDescription: ${excludeDescriptionStr}`)
 
+  // Get excludeMergeCommits
+  const excludeMergeCommitsStr = core.getInput('excludeMergeCommits')
+  core.debug(`excludeDescription: ${excludeMergeCommitsStr}`)
+
   // Get checkAllCommitMessages
   const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages')
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
@@ -71,6 +76,9 @@ export async function getInputs(): Promise<ICheckerArguments> {
       : /* default */ false,
     ignoreDescription: excludeDescriptionStr
       ? excludeDescriptionStr === 'true'
+      : /* default */ false,
+    ignoreMergeCommits: excludeMergeCommitsStr
+      ? excludeMergeCommitsStr === 'true'
       : /* default */ false,
     checkAllCommitMessages: checkAllCommitMessagesStr
       ? checkAllCommitMessagesStr === 'true'
@@ -175,7 +183,8 @@ async function getMessages(
           github.context.payload.repository.owner.name ??
             github.context.payload.repository.owner.login,
           github.context.payload.repository.name,
-          github.context.payload.pull_request.number
+          github.context.payload.pull_request.number,
+          pullRequestOptions.ignoreMergeCommits
         )
 
         for (message of commitMessages) {
@@ -200,8 +209,49 @@ async function getMessages(
         break
       }
 
+      if (!github.context.payload.repository) {
+        throw new Error('No repository found in the payload.')
+      }
+
+      if (!github.context.payload.repository.name) {
+        throw new Error('No name found in the repository.')
+      }
+
+      if (
+        !github.context.payload.repository.owner ||
+        (!github.context.payload.repository.owner.login &&
+          !github.context.payload.repository.owner.name)
+      ) {
+        throw new Error('No owner found in the repository.')
+      }
+
+      if (pullRequestOptions.ignoreMergeCommits) {
+        if (!pullRequestOptions.accessToken) {
+          throw new Error(
+            'The `excludeMergeCommits` option requires a github access token.'
+          )
+        }
+      }
+
       for (const i in github.context.payload.commits) {
         if (github.context.payload.commits[i].message) {
+          // ignore merge commits if requested
+          if (
+            pullRequestOptions.ignoreMergeCommits &&
+            (await isMergeCommit(
+              pullRequestOptions.accessToken,
+              github.context.payload.repository.owner.name ??
+                github.context.payload.repository.owner.login,
+              github.context.payload.repository.name,
+              github.context.payload.commits[i].id
+            ))
+          ) {
+            core.debug(
+              ` - skipping merge commit ${github.context.payload.commits[i].id}`
+            )
+            continue
+          }
+
           messages.push(github.context.payload.commits[i].message)
         }
       }
@@ -220,7 +270,8 @@ async function getCommitMessagesFromPullRequest(
   accessToken: string,
   repositoryOwner: string,
   repositoryName: string,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  ignoreMergeCommits: boolean
 ): Promise<string[]> {
   core.debug('Get messages from pull request...')
   core.debug(` - accessToken: ${accessToken}`)
@@ -241,7 +292,10 @@ async function getCommitMessagesFromPullRequest(
           edges {
             node {
               commit {
-                message
+                message,
+                parents(last: 1) {
+                  totalCount
+                }
               }
             }
           }
@@ -267,6 +321,9 @@ async function getCommitMessagesFromPullRequest(
     node: {
       commit: {
         message: string
+        parents: {
+          totalCount: number
+        }
       }
     }
   }
@@ -289,12 +346,76 @@ async function getCommitMessagesFromPullRequest(
   let messages: string[] = []
 
   if (repository.pullRequest) {
-    messages = repository.pullRequest.commits.edges.map(function (
-      edge: CommitEdgeItem
-    ): string {
-      return edge.node.commit.message
-    })
+    messages = repository.pullRequest.commits.edges
+      .filter(function (edge: CommitEdgeItem): boolean {
+        // Skip merge commits (which have more than 1 parent commit)
+        return !ignoreMergeCommits || edge.node.commit.parents.totalCount === 1
+      })
+      .map(function (edge: CommitEdgeItem): string {
+        return edge.node.commit.message
+      })
   }
 
   return messages
+}
+
+async function isMergeCommit(
+  accessToken: string,
+  repositoryOwner: string,
+  repositoryName: string,
+  commitSha: string
+): Promise<boolean> {
+  core.debug('Get messages from pull request...')
+  core.debug(` - accessToken: ${accessToken}`)
+  core.debug(` - repositoryOwner: ${repositoryOwner}`)
+  core.debug(` - repositoryName: ${repositoryName}`)
+  core.debug(` - commitSha: ${commitSha}`)
+
+  const query = `
+  query commit(
+    $repositoryOwner: String!,
+    $repositoryName: String!,
+    $commitSha: GitObjectID!
+  ) {
+    repository(owner: $repositoryOwner, name: $repositoryName) {
+      object(oid: $commitSha) {
+        ... on Commit {
+          message
+          parents(last: 1) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`
+  const variables = {
+    baseUrl: process.env['GITHUB_API_URL'] || 'https://api.github.com',
+    repositoryOwner,
+    repositoryName,
+    commitSha,
+    headers: {
+      authorization: `token ${accessToken}`
+    }
+  }
+
+  core.debug(` - query: ${query}`)
+  core.debug(` - variables: ${JSON.stringify(variables, null, 2)}`)
+
+  interface CommitResponseData {
+    repository: {
+      object: {
+        message: string
+        parents: {
+          totalCount: number
+        }
+      }
+    }
+  }
+
+  const response = await graphql<CommitResponseData>(query, variables)
+
+  core.debug(` - response: ${JSON.stringify(response, null, 2)}`)
+
+  return response.repository.object.parents.totalCount > 1
 }
