@@ -26,6 +26,7 @@ import * as core from '@actions/core'
  */
 export interface ICheckerArguments {
   pattern: string
+  failOnMatch?: boolean
   flags: string
   error: string
   messages: string[]
@@ -66,10 +67,14 @@ export async function checkCommitMessages(
   // Check messages
   let result = true
 
-  core.info(`Checking commit messages against "${args.pattern}"...`)
+  core.info(
+    `Checking commit messages ${args.failOnMatch ? 'do not ' : ''}match "${
+      args.pattern
+    }"...`
+  )
 
   for (const message of args.messages) {
-    if (checkMessage(message, args.pattern, args.flags)) {
+    if (checkMessage(message, args.pattern, args.flags, args.failOnMatch)) {
       core.info(`- OK: "${message}"`)
     } else {
       core.info(`- failed: "${message}"`)
@@ -93,8 +98,10 @@ export async function checkCommitMessages(
 function checkMessage(
   message: string,
   pattern: string,
-  flags: string
+  flags: string,
+  failOnMatch?: boolean
 ): boolean {
   const regex = new RegExp(pattern, flags)
-  return regex.test(message)
+  const result = regex.test(message)
+  return failOnMatch ? !result : result
 }

@@ -10,10 +10,14 @@ inputs:
     required: false
     default: 'gm'
   error:
-    description: 'A error message which will be returned in case of an error.'
+    description: 'An error message which will be returned in case of an error.'
     required: true
   excludeTitle:
     description: 'Setting this input to true will exclude the Pull Request title from the check.'
+    required: false
+    default: 'false'
+  failOnMatch:
+    description: 'Setting this input to true will reverse the logic so that a positive match will fail the check.'
     required: false
     default: 'false'
   excludeDescription:
