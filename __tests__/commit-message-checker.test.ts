@@ -77,51 +77,123 @@ describe('commit-message-checker tests', () => {
     ).rejects.toThrow('MESSAGES not defined.')
   })
 
-  it('check fails single message', async () => {
+  describe('single message, without a match', () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
       flags: '',
       error: 'some-error',
       messages: ['some-message']
     }
-    await expect(
-      commitMessageChecker.checkCommitMessages(checkerArguments)
-    ).rejects.toThrow('some-error')
+
+    it('fails by default', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages(checkerArguments)
+      ).rejects.toThrow('some-error')
+    })
+
+    it('succeeds via `failOnMatch`', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages({
+          ...checkerArguments,
+          failOnMatch: true
+        })
+      ).resolves.toBeUndefined()
+    })
   })
 
-  it('check fails multiple messages', async () => {
+  describe('single message, with a match', () => {
+    const checkerArguments: ICheckerArguments = {
+      pattern: '.*',
+      flags: '',
+      error: 'some-error',
+      messages: ['some-message']
+    }
+
+    it('succeeds by default', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages(checkerArguments)
+      ).resolves.toBeUndefined()
+    })
+
+    it('fails via `failOnMatch`', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages({
+          ...checkerArguments,
+          failOnMatch: true
+        })
+      ).rejects.toThrow('some-error')
+    })
+  })
+
+  describe('multiple messages, with a single match', () => {
     const checkerArguments: ICheckerArguments = {
       pattern: 'some-pattern',
       flags: '',
       error: 'some-error',
       messages: ['some-message', 'some-pattern']
     }
-    await expect(
-      commitMessageChecker.checkCommitMessages(checkerArguments)
-    ).rejects.toThrow('some-error')
+
+    it('fails by default', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages(checkerArguments)
+      ).rejects.toThrow('some-error')
+    })
+
+    it('fails via `failOnMatch`', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages({
+          ...checkerArguments,
+          failOnMatch: true
+        })
+      ).rejects.toThrow('some-error')
+    })
   })
 
-  it('check succeeds on single message', async () => {
+  describe('multiple messages, without any match', () => {
     const checkerArguments: ICheckerArguments = {
-      pattern: '.*',
+      pattern: 'some-pattern',
       flags: '',
       error: 'some-error',
-      messages: ['some-message']
+      messages: ['some-message', 'other-message']
     }
-    await expect(
-      commitMessageChecker.checkCommitMessages(checkerArguments)
-    ).resolves.toBeUndefined()
+
+    it('fails by default', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages(checkerArguments)
+      ).rejects.toThrow('some-error')
+    })
+
+    it('succeeds via `failOnMatch`', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages({
+          ...checkerArguments,
+          failOnMatch: true
+        })
+      ).resolves.toBeUndefined()
+    })
   })
 
-  it('check succeeds on multiple messages', async () => {
+  describe('multiple messages, all matching', () => {
     const checkerArguments: ICheckerArguments = {
       pattern: '.*',
       flags: '',
       error: 'some-error',
       messages: ['some-message', 'other-message']
     }
-    await expect(
-      commitMessageChecker.checkCommitMessages(checkerArguments)
-    ).resolves.toBeUndefined()
+
+    it('succeeds by default', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages(checkerArguments)
+      ).resolves.toBeUndefined()
+    })
+
+    it('fails via `failOnMatch`', async () => {
+      await expect(
+        commitMessageChecker.checkCommitMessages({
+          ...checkerArguments,
+          failOnMatch: true
+        })
+      ).rejects.toThrow('some-error')
+    })
   })
 })

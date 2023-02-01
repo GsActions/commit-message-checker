@@ -52,6 +52,10 @@ export async function getInputs(): Promise<ICheckerArguments> {
   result.error = core.getInput('error', {required: true})
   core.debug(`error: ${result.error}`)
 
+  // Get failOnMatch
+  result.failOnMatch = core.getInput('failOnMatch') === 'true'
+  core.debug(`failOnMatch: ${result.failOnMatch}`)
+
   // Get excludeTitle
   const excludeTitleStr = core.getInput('excludeTitle')
   core.debug(`excludeTitle: ${excludeTitleStr}`)

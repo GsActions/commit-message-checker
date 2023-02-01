@@ -89,9 +89,9 @@ function checkCommitMessages(args) {
         }
         // Check messages
         let result = true;
-        core.info(`Checking commit messages against "${args.pattern}"...`);
+        core.info(`Checking commit messages ${args.failOnMatch ? 'do not ' : ''}match "${args.pattern}"...`);
         for (const message of args.messages) {
-            if (checkMessage(message, args.pattern, args.flags)) {
+            if (checkMessage(message, args.pattern, args.flags, args.failOnMatch)) {
                 core.info(`- OK: "${message}"`);
             }
             else {
@@ -113,9 +113,10 @@ exports.checkCommitMessages = checkCommitMessages;
  * @param     pattern regex pattern for the check.
  * @returns   boolean
  */
-function checkMessage(message, pattern, flags) {
+function checkMessage(message, pattern, flags, failOnMatch) {
     const regex = new RegExp(pattern, flags);
-    return regex.test(message);
+    const result = regex.test(message);
+    return failOnMatch ? !result : result;
 }
 
 
@@ -200,6 +201,9 @@ function getInputs() {
         // Get error message
         result.error = core.getInput('error', { required: true });
         core.debug(`error: ${result.error}`);
+        // Get failOnMatch
+        result.failOnMatch = core.getInput('failOnMatch') === 'true';
+        core.debug(`failOnMatch: ${result.failOnMatch}`);
         // Get excludeTitle
         const excludeTitleStr = core.getInput('excludeTitle');
         core.debug(`excludeTitle: ${excludeTitleStr}`);

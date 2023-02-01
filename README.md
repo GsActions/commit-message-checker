@@ -69,6 +69,15 @@ jobs:
           excludeTitle: 'true' # optional: this excludes the title of a pull request
           checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
           accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+      - name: Squash/Fixup Check
+        uses: gsactions/commit-message-checker@v2
+        with:
+          pattern: '^(fixup|squash)'
+          failOnMatch: 'true' # optional: this will fail the test if the pattern matches a commit message
+          error: Don't forget to squash/fixup your commits before merging
+          excludeDescription: 'true'
+          checkAllCommitMessages: 'true'
+          accessToken: ${{ secrets.GITHUB_TOKEN }}
       - name: Check for Resolves / Fixes
         uses: gsactions/commit-message-checker@v2
         with:
