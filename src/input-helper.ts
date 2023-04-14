@@ -102,6 +102,7 @@ async function getMessages(
   const messages: string[] = []
 
   core.debug(` - eventName: ${github.context.eventName}`)
+  core.info(` - context: ${github.context}`)
 
   switch (github.context.eventName) {
     case 'pull_request_target':

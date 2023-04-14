@@ -242,6 +242,7 @@ function getMessages(pullRequestOptions) {
         core.debug(` - pullRequestOptions: ${JSON.stringify(pullRequestOptions, null, 2)}`);
         const messages = [];
         core.debug(` - eventName: ${github.context.eventName}`);
+        core.info(` - context: ${github.context}`);
         switch (github.context.eventName) {
             case 'pull_request_target':
             case 'pull_request': {
