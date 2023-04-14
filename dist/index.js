@@ -451,6 +451,7 @@ function run() {
                 core.info(`No commits found in the payload, skipping check.`);
             }
             else {
+                core.info(`test::: ${checkerArguments}`);
                 yield commitMessageChecker.checkCommitMessages(checkerArguments);
             }
         }
