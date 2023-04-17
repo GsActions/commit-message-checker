@@ -391,9 +391,10 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
                 delete edgedata[i];
             }
         }
-        core.info(JSON.stringify(edgedata));
+        core.info(`edgedata:   ${JSON.stringify(edgedata)}`);
         if (repository.pullRequest) {
             if (edgedata) {
+                core.info(`test325`);
                 messages = edgedata.map(function (edge) {
                     return edge.node.commit.message;
                 });
