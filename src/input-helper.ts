@@ -321,7 +321,7 @@ async function getCommitMessagesFromPullRequest(
 
   core.info(`edgedata:   ${ JSON.stringify(edgedata) }`)
   if (repository.pullRequest) {
-    if (edgedata.filter(obj => obj !== null)) {
+    if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
       core.info(`test325`)
       messages = edgedata.map(function (
         edge: CommitEdgeItem
