@@ -311,7 +311,7 @@ async function getCommitMessagesFromPullRequest(
   core.info(`testxxxss ${excludUsersList}`)
   core.info(Object.keys(edgedata).length.toString())
 
-  for (let i = 0; i < 6; i++) {
+  for (let i = 0; i < 4; i++) {
     core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
     if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
       core.info(`test314`)
