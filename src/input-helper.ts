@@ -311,13 +311,14 @@ async function getCommitMessagesFromPullRequest(
   core.info(`testxxxss ${excludUsersList}`)
   core.info(Object.keys(edgedata).length.toString())
 
-  for (let i = 0; i < Object.keys(edgedata).length; i++) {
+  for (let i = 0; i < 8; i++) {
     core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
     if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
       core.info(`test314`)
       delete edgedata[i];
     }
   }
+
   core.info(JSON.stringify(edgedata))
   if (repository.pullRequest) {
     messages = edgedata.map(function (
