@@ -306,11 +306,11 @@ async function getCommitMessagesFromPullRequest(
 
   let messages: string[] = []
   var edgedata = repository.pullRequest.commits.edges
-  var testx = excludUsersList.join("")
-  core.info(`testx ${testx}`)
+  var excludUsersStr = excludUsersList.toString().replace(",", " ")
+  core.info(`testx ${excludUsersStr}`)
 
   for (let i = 0; i < Object.keys(edgedata).length; i++) {
-    if (excludUsersList.join(" ").includes(edgedata[i].node.commit.author.name)) {
+    if (excludUsersStr.includes(edgedata[i].node.commit.author.name)) {
       core.info(`test314`)
       delete edgedata[i];
     }
