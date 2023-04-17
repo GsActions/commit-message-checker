@@ -108,7 +108,7 @@ async function getMessages(
   const messages: string[] = []
 
   core.debug(` - eventName: ${github.context.eventName}`)
-  core.info(` - context: ${JSON.stringify(github.context)}`)
+  // core.info(` - context: ${JSON.stringify(github.context)}`)
   core.debug(` - PR: ${github.context.actor}`)
 
   switch (github.context.eventName) {
@@ -316,6 +316,7 @@ async function getCommitMessagesFromPullRequest(
       delete edgedata[i];
     }
   }
+  core.info(JSON.stringify(edgedata))
   if (repository.pullRequest) {
     messages = edgedata.map(function (
       edge: CommitEdgeItem
