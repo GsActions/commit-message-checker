@@ -330,6 +330,7 @@ function getMessages(pullRequestOptions) {
     });
 }
 function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber, excludUsersList) {
+    var excludUsersList;
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages from pull request...');
         core.debug(` - accessToken: ${accessToken}`);
@@ -379,10 +380,10 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
         var edgedata = repository.pullRequest.commits.edges;
-        var excludUsersStr = excludUsersList.toString();
-        core.info(`testxxxss ${excludUsersStr}`);
+        excludUsersList = ["amarkotasky"];
+        core.info(`testxxxss ${excludUsersList}`);
         for (let i = 0; i < Object.keys(edgedata).length; i++) {
-            if (excludUsersStr.includes(edgedata[i].node.commit.author.name)) {
+            if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
                 core.info(`test314`);
                 delete edgedata[i];
             }
