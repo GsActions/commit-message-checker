@@ -21,7 +21,6 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {graphql} from '@octokit/graphql'
-import { ListenOptions } from 'net'
 import {ICheckerArguments} from './commit-message-checker'
 
 export interface PullRequestOptions {
