@@ -255,7 +255,9 @@ async function getCommitMessagesFromPullRequest(
               commit {
                 message
                 author {
-                  username
+                  user {
+                    login
+                  }
                 }
               }
             }
@@ -283,7 +285,9 @@ async function getCommitMessagesFromPullRequest(
       commit: {
         message: string
         author: {
-          username: string
+          user: {
+            login: string
+          }
         }
       }
     }
@@ -314,8 +318,8 @@ async function getCommitMessagesFromPullRequest(
   var edgedataLength: number = +Object.keys(edgedata).length;
 
   for (let i = 0; i < edgedataLength; i++) {
-    core.info(`${i} abccc: ${edgedata[i].node.commit.author.username}`)
-    if (excludUsersList.includes(edgedata[i].node.commit.author.username)) {
+    core.info(`${i} abccc: ${edgedata[i].node.commit.author.user.login}`)
+    if (excludUsersList.includes(edgedata[i].node.commit.author.user.login)) {
       core.info(`test314`)
       delete edgedata[i];
     }
