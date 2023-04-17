@@ -262,7 +262,7 @@ function getMessages(pullRequestOptions) {
                     if (!github.context.payload.pull_request.title) {
                         throw new Error('No title found in the pull_request.');
                     }
-                    message += github.context.payload.pull_request.title;
+                    message += `PR Title: ${github.context.payload.pull_request.title}`;
                 }
                 else {
                     core.debug(' - skipping title');
