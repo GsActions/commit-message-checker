@@ -31,7 +31,7 @@ inputs:
   excludUsers:
     description: 'you must provide list of users to exclude compliance check'
     required: false
-    default: []      
+    default: '[]'      
 runs:
   using: node16
   main: dist/index.js
