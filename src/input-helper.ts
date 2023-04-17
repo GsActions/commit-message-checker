@@ -309,9 +309,10 @@ async function getCommitMessagesFromPullRequest(
   core.info(`before ${JSON.stringify(edgedata)}`)
   var excludUsersList = ['Amar Khan']
   core.info(`testxxxss ${excludUsersList}`)
+  core.info(Object.keys(edgedata).length.toString())
 
   for (let i = 0; i < Object.keys(edgedata).length; i++) {
-    core.info(`abccc: ${edgedata[i].node.commit.author.name}`)
+    core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
     if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
       core.info(`test314`)
       delete edgedata[i];
