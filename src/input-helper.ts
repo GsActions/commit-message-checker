@@ -307,10 +307,12 @@ async function getCommitMessagesFromPullRequest(
   let messages: string[] = []
   var edgedata = repository.pullRequest.commits.edges
   core.info(`before ${JSON.stringify(edgedata)}`)
+  core.info(`testxxxbefore ${excludUsersList}`)  
   var excludUsersList = ['Amar Khan']
   core.info(`testxxxss ${excludUsersList}`)
   core.info(Object.keys(edgedata).length.toString())
   var edgedataLength: number = +Object.keys(edgedata).length;
+
   for (let i = 0; i < edgedataLength; i++) {
     core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
     if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
@@ -319,7 +321,7 @@ async function getCommitMessagesFromPullRequest(
     }
   }
 
-  core.info(`edgedata:   ${ JSON.stringify(edgedata) }`)
+  core.info(`edgedata: ${JSON.stringify(edgedata)}`)
   if (repository.pullRequest) {
     if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
       core.info(`test325`)
@@ -332,8 +334,6 @@ async function getCommitMessagesFromPullRequest(
     else {
       messages = []
     }
-
   }
-
   return messages
 }

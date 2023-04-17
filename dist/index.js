@@ -381,6 +381,7 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         let messages = [];
         var edgedata = repository.pullRequest.commits.edges;
         core.info(`before ${JSON.stringify(edgedata)}`);
+        core.info(`testxxxbefore ${excludUsersList}`);
         excludUsersList = ['Amar Khan'];
         core.info(`testxxxss ${excludUsersList}`);
         core.info(Object.keys(edgedata).length.toString());
@@ -392,7 +393,7 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
                 delete edgedata[i];
             }
         }
-        core.info(`edgedata:   ${JSON.stringify(edgedata)}`);
+        core.info(`edgedata: ${JSON.stringify(edgedata)}`);
         if (repository.pullRequest) {
             if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
                 core.info(`test325`);
