@@ -29,6 +29,7 @@ export interface ICheckerArguments {
   flags: string
   error: string
   messages: string[]
+  excludUsersList: string
 }
 
 /**
@@ -67,7 +68,8 @@ export async function checkCommitMessages(
   let result = true
 
   core.info(`Checking commit messages against "${args.pattern}"...`)
-
+  core.info(`Excluding commits by users: ${args.excludUsersList}`)
+  
   for (const message of args.messages) {
     if (checkMessage(message, args.pattern, args.flags)) {
       core.info(`- OK: "${message}"`)
