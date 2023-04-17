@@ -28,6 +28,10 @@ inputs:
     description: 'you must provide GITHUB_TOKEN to this input if checkAllCommitMessages is true'
     required: false
     default: 'false'  
+  excludUsers:
+    description: 'you must provide list of users to exclude compliance check'
+    required: false
+    default: '[]'      
 runs:
   using: node16
   main: dist/index.js

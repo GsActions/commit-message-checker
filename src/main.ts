@@ -29,7 +29,7 @@ async function run(): Promise<void> {
   try {
     const checkerArguments = await inputHelper.getInputs()
     if (checkerArguments.messages.length === 0) {
-      core.info(`No commits found in the payload, skipping check.`)
+      core.info(`No commits found in the payload for relevent included users, skipping check.`)
     } else {
       await commitMessageChecker.checkCommitMessages(checkerArguments)
     }
