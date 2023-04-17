@@ -21,6 +21,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import {graphql} from '@octokit/graphql'
+import { ListenOptions } from 'net'
 import {ICheckerArguments} from './commit-message-checker'
 
 export interface PullRequestOptions {
@@ -28,6 +29,7 @@ export interface PullRequestOptions {
   ignoreDescription: boolean
   checkAllCommitMessages: boolean // requires github token
   accessToken: string
+  excludUsersList: Array<string>
 }
 
 /**
@@ -64,6 +66,9 @@ export async function getInputs(): Promise<ICheckerArguments> {
   const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages')
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
 
+  const excludUsersList = core.getInput('excludUsers')
+  core.debug(`excludUsersList: ${excludUsersList}`)
+
   // Set pullRequestOptions
   const pullRequestOptions: PullRequestOptions = {
     ignoreTitle: excludeTitleStr
@@ -75,7 +80,8 @@ export async function getInputs(): Promise<ICheckerArguments> {
     checkAllCommitMessages: checkAllCommitMessagesStr
       ? checkAllCommitMessagesStr === 'true'
       : /* default */ false,
-    accessToken: core.getInput('accessToken')
+    accessToken: core.getInput('accessToken'),
+    excludUsersList: Array.from(excludUsersList)
   }
   core.debug(`accessToken: ${pullRequestOptions.accessToken}`)
 
@@ -103,6 +109,7 @@ async function getMessages(
 
   core.debug(` - eventName: ${github.context.eventName}`)
   core.info(` - context: ${JSON.stringify(github.context)}`)
+  core.debug(` - PR: ${github.context.actor}`)
 
   switch (github.context.eventName) {
     case 'pull_request_target':
@@ -176,7 +183,8 @@ async function getMessages(
           github.context.payload.repository.owner.name ??
             github.context.payload.repository.owner.login,
           github.context.payload.repository.name,
-          github.context.payload.pull_request.number
+          github.context.payload.pull_request.number,
+          pullRequestOptions.excludUsersList
         )
 
         for (message of commitMessages) {
@@ -221,13 +229,15 @@ async function getCommitMessagesFromPullRequest(
   accessToken: string,
   repositoryOwner: string,
   repositoryName: string,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  excludUsersList: Array<string>
 ): Promise<string[]> {
   core.debug('Get messages from pull request...')
   core.debug(` - accessToken: ${accessToken}`)
   core.debug(` - repositoryOwner: ${repositoryOwner}`)
   core.debug(` - repositoryName: ${repositoryName}`)
   core.debug(` - pullRequestNumber: ${pullRequestNumber}`)
+  core.debug(` - excludUsersList: ${excludUsersList}`)
 
   const query = `
   query commitMessages(
@@ -235,7 +245,8 @@ async function getCommitMessagesFromPullRequest(
     $repositoryName: String!
     $pullRequestNumber: Int!
     $numberOfCommits: Int = 100
-  ) {
+  ) 
+  {
     repository(owner: $repositoryOwner, name: $repositoryName) {
       pullRequest(number: $pullRequestNumber) {
         commits(last: $numberOfCommits) {
@@ -243,6 +254,9 @@ async function getCommitMessagesFromPullRequest(
             node {
               commit {
                 message
+                author {
+                  name
+                }
               }
             }
           }
@@ -268,6 +282,9 @@ async function getCommitMessagesFromPullRequest(
     node: {
       commit: {
         message: string
+        author: {
+          name: string
+        }
       }
     }
   }
@@ -288,9 +305,16 @@ async function getCommitMessagesFromPullRequest(
   core.debug(` - response: ${JSON.stringify(repository, null, 2)}`)
 
   let messages: string[] = []
+  var edgedata = repository.pullRequest.commits.edges
 
+  for (let i = 0; i < Object.keys(edgedata).length; i++) {
+    if (excludUsersList.join(" ").includes(edgedata[i].node.commit.author.name)) {
+      console.log(edgedata[i]);
+      delete edgedata[i];
+    }
+  }
   if (repository.pullRequest) {
-    messages = repository.pullRequest.commits.edges.map(function (
+    messages = edgedata.map(function (
       edge: CommitEdgeItem
     ): string {
       return edge.node.commit.message

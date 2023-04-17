@@ -209,6 +209,8 @@ function getInputs() {
         // Get checkAllCommitMessages
         const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages');
         core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`);
+        const excludUsersList = core.getInput('excludUsers');
+        core.debug(`excludUsersList: ${excludUsersList}`);
         // Set pullRequestOptions
         const pullRequestOptions = {
             ignoreTitle: excludeTitleStr
@@ -220,7 +222,8 @@ function getInputs() {
             checkAllCommitMessages: checkAllCommitMessagesStr
                 ? checkAllCommitMessagesStr === 'true'
                 : /* default */ false,
-            accessToken: core.getInput('accessToken')
+            accessToken: core.getInput('accessToken'),
+            excludUsersList: Array.from(excludUsersList)
         };
         core.debug(`accessToken: ${pullRequestOptions.accessToken}`);
         // Get commit messages
@@ -243,6 +246,7 @@ function getMessages(pullRequestOptions) {
         const messages = [];
         core.debug(` - eventName: ${github.context.eventName}`);
         core.info(` - context: ${JSON.stringify(github.context)}`);
+        core.debug(` - PR: ${github.context.actor}`);
         switch (github.context.eventName) {
             case 'pull_request_target':
             case 'pull_request': {
@@ -293,7 +297,7 @@ function getMessages(pullRequestOptions) {
                             !github.context.payload.repository.owner.name)) {
                         throw new Error('No owner found in the repository.');
                     }
-                    const commitMessages = yield getCommitMessagesFromPullRequest(pullRequestOptions.accessToken, (_a = github.context.payload.repository.owner.name) !== null && _a !== void 0 ? _a : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.pull_request.number);
+                    const commitMessages = yield getCommitMessagesFromPullRequest(pullRequestOptions.accessToken, (_a = github.context.payload.repository.owner.name) !== null && _a !== void 0 ? _a : github.context.payload.repository.owner.login, github.context.payload.repository.name, github.context.payload.pull_request.number, pullRequestOptions.excludUsersList);
                     for (message of commitMessages) {
                         if (message) {
                             messages.push(message);
@@ -325,20 +329,22 @@ function getMessages(pullRequestOptions) {
         return messages;
     });
 }
-function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber) {
+function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber, excludUsersList) {
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages from pull request...');
         core.debug(` - accessToken: ${accessToken}`);
         core.debug(` - repositoryOwner: ${repositoryOwner}`);
         core.debug(` - repositoryName: ${repositoryName}`);
         core.debug(` - pullRequestNumber: ${pullRequestNumber}`);
+        core.debug(` - excludUsersList: ${excludUsersList}`);
         const query = `
   query commitMessages(
     $repositoryOwner: String!
     $repositoryName: String!
     $pullRequestNumber: Int!
     $numberOfCommits: Int = 100
-  ) {
+  ) 
+  {
     repository(owner: $repositoryOwner, name: $repositoryName) {
       pullRequest(number: $pullRequestNumber) {
         commits(last: $numberOfCommits) {
@@ -346,6 +352,9 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
             node {
               commit {
                 message
+                author {
+                  name
+                }
               }
             }
           }
@@ -369,8 +378,15 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         const repository = response.repository;
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
+        var edgedata = repository.pullRequest.commits.edges;
+        for (let i = 0; i < Object.keys(edgedata).length; i++) {
+            if (excludUsersList.join(" ").includes(edgedata[i].node.commit.author.name)) {
+                console.log(edgedata[i]);
+                delete edgedata[i];
+            }
+        }
         if (repository.pullRequest) {
-            messages = repository.pullRequest.commits.edges.map(function (edge) {
+            messages = edgedata.map(function (edge) {
                 return edge.node.commit.message;
             });
         }
