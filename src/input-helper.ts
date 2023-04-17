@@ -20,14 +20,15 @@
  */
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {graphql} from '@octokit/graphql'
-import {ICheckerArguments} from './commit-message-checker'
+import { graphql } from '@octokit/graphql'
+import { ICheckerArguments } from './commit-message-checker'
 
 export interface PullRequestOptions {
   ignoreTitle: boolean
   ignoreDescription: boolean
   checkAllCommitMessages: boolean // requires github token
   accessToken: string
+  excludUsersList: string
 }
 
 /**
@@ -41,7 +42,7 @@ export async function getInputs(): Promise<ICheckerArguments> {
   core.debug('Get inputs...')
 
   // Get pattern
-  result.pattern = core.getInput('pattern', {required: true})
+  result.pattern = core.getInput('pattern', { required: true })
   core.debug(`pattern: ${result.pattern}`)
 
   // Get flags
@@ -49,7 +50,7 @@ export async function getInputs(): Promise<ICheckerArguments> {
   core.debug(`flags: ${result.flags}`)
 
   // Get error message
-  result.error = core.getInput('error', {required: true})
+  result.error = core.getInput('error', { required: true })
   core.debug(`error: ${result.error}`)
 
   // Get excludeTitle
@@ -64,6 +65,9 @@ export async function getInputs(): Promise<ICheckerArguments> {
   const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages')
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
 
+  const excludUsersList = core.getInput('excludUsers')
+  core.info(`Excluding commits by users: ${excludUsersList}`)
+
   // Set pullRequestOptions
   const pullRequestOptions: PullRequestOptions = {
     ignoreTitle: excludeTitleStr
@@ -75,7 +79,8 @@ export async function getInputs(): Promise<ICheckerArguments> {
     checkAllCommitMessages: checkAllCommitMessagesStr
       ? checkAllCommitMessagesStr === 'true'
       : /* default */ false,
-    accessToken: core.getInput('accessToken')
+    accessToken: core.getInput('accessToken'),
+    excludUsersList: excludUsersList
   }
   core.debug(`accessToken: ${pullRequestOptions.accessToken}`)
 
@@ -102,6 +107,8 @@ async function getMessages(
   const messages: string[] = []
 
   core.debug(` - eventName: ${github.context.eventName}`)
+  // core.info(` - context: ${JSON.stringify(github.context)}`)
+  core.debug(` - PR: ${github.context.actor}`)
 
   switch (github.context.eventName) {
     case 'pull_request_target':
@@ -122,7 +129,7 @@ async function getMessages(
           throw new Error('No title found in the pull_request.')
         }
 
-        message += github.context.payload.pull_request.title
+        message += `PR Title: ${github.context.payload.pull_request.title}`
       } else {
         core.debug(' - skipping title')
       }
@@ -173,9 +180,10 @@ async function getMessages(
         const commitMessages = await getCommitMessagesFromPullRequest(
           pullRequestOptions.accessToken,
           github.context.payload.repository.owner.name ??
-            github.context.payload.repository.owner.login,
+          github.context.payload.repository.owner.login,
           github.context.payload.repository.name,
-          github.context.payload.pull_request.number
+          github.context.payload.pull_request.number,
+          pullRequestOptions.excludUsersList
         )
 
         for (message of commitMessages) {
@@ -201,7 +209,7 @@ async function getMessages(
       }
 
       for (const i in github.context.payload.commits) {
-        if (github.context.payload.commits[i].message) {
+        if (github.context.payload.commits[i].message && !pullRequestOptions.excludUsersList.includes(github.context.payload.commits[i].author.name)) {
           messages.push(github.context.payload.commits[i].message)
         }
       }
@@ -220,13 +228,15 @@ async function getCommitMessagesFromPullRequest(
   accessToken: string,
   repositoryOwner: string,
   repositoryName: string,
-  pullRequestNumber: number
+  pullRequestNumber: number,
+  excludUsersList: string
 ): Promise<string[]> {
   core.debug('Get messages from pull request...')
   core.debug(` - accessToken: ${accessToken}`)
   core.debug(` - repositoryOwner: ${repositoryOwner}`)
   core.debug(` - repositoryName: ${repositoryName}`)
   core.debug(` - pullRequestNumber: ${pullRequestNumber}`)
+  core.debug(` - excludUsersList: ${excludUsersList}`)
 
   const query = `
   query commitMessages(
@@ -234,7 +244,8 @@ async function getCommitMessagesFromPullRequest(
     $repositoryName: String!
     $pullRequestNumber: Int!
     $numberOfCommits: Int = 100
-  ) {
+  ) 
+  {
     repository(owner: $repositoryOwner, name: $repositoryName) {
       pullRequest(number: $pullRequestNumber) {
         commits(last: $numberOfCommits) {
@@ -242,6 +253,9 @@ async function getCommitMessagesFromPullRequest(
             node {
               commit {
                 message
+                author {
+                  name
+                }
               }
             }
           }
@@ -267,6 +281,9 @@ async function getCommitMessagesFromPullRequest(
     node: {
       commit: {
         message: string
+        author: {
+          name: string
+        }
       }
     }
   }
@@ -287,14 +304,27 @@ async function getCommitMessagesFromPullRequest(
   core.debug(` - response: ${JSON.stringify(repository, null, 2)}`)
 
   let messages: string[] = []
+  var edgedata = repository.pullRequest.commits.edges
+  var edgedataLength: number = +Object.keys(edgedata).length;
 
-  if (repository.pullRequest) {
-    messages = repository.pullRequest.commits.edges.map(function (
-      edge: CommitEdgeItem
-    ): string {
-      return edge.node.commit.message
-    })
+  for (let i = 0; i < edgedataLength; i++) {
+    if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
+      delete edgedata[i];
+    }
   }
 
+  core.debug(`edgedata: ${JSON.stringify(edgedata)}`)
+  if (repository.pullRequest) {
+    if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
+      messages = edgedata.map(function (
+        edge: CommitEdgeItem
+      ): string {
+        return edge.node.commit.message
+      })
+    }
+    else {
+      messages = []
+    }
+  }
   return messages
 }

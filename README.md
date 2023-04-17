@@ -69,6 +69,7 @@ jobs:
           excludeTitle: 'true' # optional: this excludes the title of a pull request
           checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
           accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+          excludUsers: '["user-list-to-exclude"]'
       - name: Check for Resolves / Fixes
         uses: gsactions/commit-message-checker@v2
         with:
