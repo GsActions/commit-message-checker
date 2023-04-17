@@ -210,7 +210,7 @@ async function getMessages(
       }
 
       for (const i in github.context.payload.commits) {
-        if (github.context.payload.commits[i].message) {
+        if (github.context.payload.commits[i].message && !pullRequestOptions.excludUsersList.includes(github.context.payload.commits[i].author.username)) {
           messages.push(github.context.payload.commits[i].message)
         }
       }
@@ -255,7 +255,7 @@ async function getCommitMessagesFromPullRequest(
               commit {
                 message
                 author {
-                  name
+                  username
                 }
               }
             }
@@ -283,7 +283,7 @@ async function getCommitMessagesFromPullRequest(
       commit: {
         message: string
         author: {
-          name: string
+          username: string
         }
       }
     }
@@ -314,8 +314,8 @@ async function getCommitMessagesFromPullRequest(
   var edgedataLength: number = +Object.keys(edgedata).length;
 
   for (let i = 0; i < edgedataLength; i++) {
-    core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
-    if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
+    core.info(`${i} abccc: ${edgedata[i].node.commit.author.username}`)
+    if (excludUsersList.includes(edgedata[i].node.commit.author.username)) {
       core.info(`test314`)
       delete edgedata[i];
     }
