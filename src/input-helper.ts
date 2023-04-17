@@ -29,7 +29,7 @@ export interface PullRequestOptions {
   ignoreDescription: boolean
   checkAllCommitMessages: boolean // requires github token
   accessToken: string
-  excludUsersList: Array<string>
+  excludUsersList: string
 }
 
 /**
@@ -67,7 +67,7 @@ export async function getInputs(): Promise<ICheckerArguments> {
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
 
   const excludUsersList = core.getInput('excludUsers')
-  core.debug(`excludUsersList: ${excludUsersList}`)
+  core.info(`excludUsersList: ${excludUsersList}`)
 
   // Set pullRequestOptions
   const pullRequestOptions: PullRequestOptions = {
@@ -81,7 +81,7 @@ export async function getInputs(): Promise<ICheckerArguments> {
       ? checkAllCommitMessagesStr === 'true'
       : /* default */ false,
     accessToken: core.getInput('accessToken'),
-    excludUsersList: Array.from(excludUsersList)
+    excludUsersList: excludUsersList
   }
   core.debug(`accessToken: ${pullRequestOptions.accessToken}`)
 
@@ -230,7 +230,7 @@ async function getCommitMessagesFromPullRequest(
   repositoryOwner: string,
   repositoryName: string,
   pullRequestNumber: number,
-  excludUsersList: Array<string>
+  excludUsersList: string
 ): Promise<string[]> {
   core.debug('Get messages from pull request...')
   core.debug(` - accessToken: ${accessToken}`)
@@ -308,7 +308,7 @@ async function getCommitMessagesFromPullRequest(
   var edgedata = repository.pullRequest.commits.edges
   core.info(`before ${JSON.stringify(edgedata)}`)
   core.info(`testxxxbefore ${excludUsersList}`)  
-  var excludUsersList = ['Amar Khan']
+  // var excludUsersList = ['Amar Khan']
   core.info(`testxxxss ${excludUsersList}`)
   core.info(Object.keys(edgedata).length.toString())
   var edgedataLength: number = +Object.keys(edgedata).length;

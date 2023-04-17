@@ -210,7 +210,7 @@ function getInputs() {
         const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages');
         core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`);
         const excludUsersList = core.getInput('excludUsers');
-        core.debug(`excludUsersList: ${excludUsersList}`);
+        core.info(`excludUsersList: ${excludUsersList}`);
         // Set pullRequestOptions
         const pullRequestOptions = {
             ignoreTitle: excludeTitleStr
@@ -223,7 +223,7 @@ function getInputs() {
                 ? checkAllCommitMessagesStr === 'true'
                 : /* default */ false,
             accessToken: core.getInput('accessToken'),
-            excludUsersList: Array.from(excludUsersList)
+            excludUsersList: excludUsersList
         };
         core.debug(`accessToken: ${pullRequestOptions.accessToken}`);
         // Get commit messages
@@ -330,7 +330,6 @@ function getMessages(pullRequestOptions) {
     });
 }
 function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, repositoryName, pullRequestNumber, excludUsersList) {
-    var excludUsersList;
     return __awaiter(this, void 0, void 0, function* () {
         core.debug('Get messages from pull request...');
         core.debug(` - accessToken: ${accessToken}`);
@@ -382,7 +381,7 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         var edgedata = repository.pullRequest.commits.edges;
         core.info(`before ${JSON.stringify(edgedata)}`);
         core.info(`testxxxbefore ${excludUsersList}`);
-        excludUsersList = ['Amar Khan'];
+        // var excludUsersList = ['Amar Khan']
         core.info(`testxxxss ${excludUsersList}`);
         core.info(Object.keys(edgedata).length.toString());
         var edgedataLength = +Object.keys(edgedata).length;
