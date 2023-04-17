@@ -90,7 +90,6 @@ function checkCommitMessages(args) {
         // Check messages
         let result = true;
         core.info(`Checking commit messages against "${args.pattern}"...`);
-        core.info(`Excluding commits by users: ${args.excludUsersList}`);
         for (const message of args.messages) {
             if (checkMessage(message, args.pattern, args.flags)) {
                 core.info(`- OK: "${message}"`);
@@ -211,6 +210,7 @@ function getInputs() {
         const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages');
         core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`);
         const excludUsersList = core.getInput('excludUsers');
+        core.info(`Excluding commits by users: ${excludUsersList}`);
         // Set pullRequestOptions
         const pullRequestOptions = {
             ignoreTitle: excludeTitleStr

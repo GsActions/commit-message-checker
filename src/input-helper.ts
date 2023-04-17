@@ -67,6 +67,7 @@ export async function getInputs(): Promise<ICheckerArguments> {
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
 
   const excludUsersList = core.getInput('excludUsers')
+  core.info(`Excluding commits by users: ${excludUsersList}`)
 
   // Set pullRequestOptions
   const pullRequestOptions: PullRequestOptions = {
