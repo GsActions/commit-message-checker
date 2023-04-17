@@ -306,6 +306,7 @@ async function getCommitMessagesFromPullRequest(
 
   let messages: string[] = []
   var edgedata = repository.pullRequest.commits.edges
+  core.info(`before ${JSON.stringify(edgedata)}`)
   var excludUsersList = ['Amar Khan']
   core.info(`testxxxss ${excludUsersList}`)
 

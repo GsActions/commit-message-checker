@@ -380,6 +380,7 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
         var edgedata = repository.pullRequest.commits.edges;
+        core.info(`before ${JSON.stringify(edgedata)}`);
         excludUsersList = ['Amar Khan'];
         core.info(`testxxxss ${excludUsersList}`);
         for (let i = 0; i < Object.keys(edgedata).length; i++) {
