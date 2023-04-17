@@ -67,7 +67,6 @@ export async function getInputs(): Promise<ICheckerArguments> {
   core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`)
 
   const excludUsersList = core.getInput('excludUsers')
-  core.info(`excludUsersList: ${excludUsersList}`)
 
   // Set pullRequestOptions
   const pullRequestOptions: PullRequestOptions = {
@@ -306,25 +305,17 @@ async function getCommitMessagesFromPullRequest(
 
   let messages: string[] = []
   var edgedata = repository.pullRequest.commits.edges
-  core.info(`before ${JSON.stringify(edgedata)}`)
-  core.info(`testxxxbefore ${excludUsersList}`)  
-  // var excludUsersList = ['Amar Khan']
-  core.info(`testxxxss ${excludUsersList}`)
-  core.info(Object.keys(edgedata).length.toString())
   var edgedataLength: number = +Object.keys(edgedata).length;
 
   for (let i = 0; i < edgedataLength; i++) {
-    core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`)
     if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
-      core.info(`test314`)
       delete edgedata[i];
     }
   }
 
-  core.info(`edgedata: ${JSON.stringify(edgedata)}`)
+  core.debug(`edgedata: ${JSON.stringify(edgedata)}`)
   if (repository.pullRequest) {
     if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
-      core.info(`test325`)
       messages = edgedata.map(function (
         edge: CommitEdgeItem
       ): string {

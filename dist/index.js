@@ -210,7 +210,6 @@ function getInputs() {
         const checkAllCommitMessagesStr = core.getInput('checkAllCommitMessages');
         core.debug(`checkAllCommitMessages: ${checkAllCommitMessagesStr}`);
         const excludUsersList = core.getInput('excludUsers');
-        core.info(`excludUsersList: ${excludUsersList}`);
         // Set pullRequestOptions
         const pullRequestOptions = {
             ignoreTitle: excludeTitleStr
@@ -379,23 +378,15 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.debug(` - response: ${JSON.stringify(repository, null, 2)}`);
         let messages = [];
         var edgedata = repository.pullRequest.commits.edges;
-        core.info(`before ${JSON.stringify(edgedata)}`);
-        core.info(`testxxxbefore ${excludUsersList}`);
-        // var excludUsersList = ['Amar Khan']
-        core.info(`testxxxss ${excludUsersList}`);
-        core.info(Object.keys(edgedata).length.toString());
         var edgedataLength = +Object.keys(edgedata).length;
         for (let i = 0; i < edgedataLength; i++) {
-            core.info(`${i} abccc: ${edgedata[i].node.commit.author.name}`);
             if (excludUsersList.includes(edgedata[i].node.commit.author.name)) {
-                core.info(`test314`);
                 delete edgedata[i];
             }
         }
-        core.info(`edgedata: ${JSON.stringify(edgedata)}`);
+        core.debug(`edgedata: ${JSON.stringify(edgedata)}`);
         if (repository.pullRequest) {
             if (edgedata.filter(obj => obj !== null) && edgedata.filter(obj => obj !== null).length > 0) {
-                core.info(`test325`);
                 messages = edgedata.map(function (edge) {
                     return edge.node.commit.message;
                 });
@@ -482,7 +473,6 @@ function run() {
                 core.info(`No commits found in the payload, skipping check.`);
             }
             else {
-                core.info(`test::: ${JSON.stringify(checkerArguments)}`);
                 yield commitMessageChecker.checkCommitMessages(checkerArguments);
             }
         }

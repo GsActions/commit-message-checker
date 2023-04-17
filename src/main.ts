@@ -31,7 +31,6 @@ async function run(): Promise<void> {
     if (checkerArguments.messages.length === 0) {
       core.info(`No commits found in the payload, skipping check.`)
     } else {
-      core.info(`test::: ${JSON.stringify(checkerArguments)}`)
       await commitMessageChecker.checkCommitMessages(checkerArguments)
     }
   } catch (error) {
