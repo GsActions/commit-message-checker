@@ -353,9 +353,7 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
               commit {
                 message
                 author {
-                  user {
-                    login
-                  }
+                  user
                 }
               }
             }
@@ -388,8 +386,8 @@ function getCommitMessagesFromPullRequest(accessToken, repositoryOwner, reposito
         core.info(Object.keys(edgedata).length.toString());
         var edgedataLength = +Object.keys(edgedata).length;
         for (let i = 0; i < edgedataLength; i++) {
-            core.info(`${i} abccc: ${edgedata[i].node.commit.author.user.login}`);
-            if (excludUsersList.includes(edgedata[i].node.commit.author.user.login)) {
+            core.info(`${i} abccc: ${edgedata[i].node.commit.author.user}`);
+            if (excludUsersList.includes(edgedata[i].node.commit.author.user)) {
                 core.info(`test314`);
                 delete edgedata[i];
             }
