@@ -210,7 +210,7 @@ async function getMessages(
       }
 
       for (const i in github.context.payload.commits) {
-        if (github.context.payload.commits[i].message && !pullRequestOptions.excludUsersList.includes(github.context.payload.commits[i].author.username)) {
+        if (github.context.payload.commits[i].message && !pullRequestOptions.excludUsersList.includes(github.context.payload.commits[i].author.name)) {
           messages.push(github.context.payload.commits[i].message)
         }
       }
