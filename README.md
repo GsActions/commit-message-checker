@@ -24,7 +24,7 @@ More information about `pattern` and `flags` can be found in the
 `flags` is optional and defaults to `gm`.
 
 `excludeDescription`, `excludeTitle` and `checkAllCommitMessages` are optional.
-Default behavior is to include the description and title and not check pull
+The default behavior is to include the description and title and not check pull
 request commit messages.
 
 ### Example Workflow
@@ -55,13 +55,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check Commit Type
-        uses: gsactions/commit-message-checker@v2
+        uses: gsactions/commit-message-checker@v3
         with:
           pattern: '\[[^]]+\] .+$'
           flags: 'gm'
           error: 'Your first line has to contain a commit type like "[BUGFIX]".'
       - name: Check Line Length
-        uses: gsactions/commit-message-checker@v2
+        uses: gsactions/commit-message-checker@v3
         with:
           pattern: '^[^#].{74}'
           error: 'The maximum line length of 74 characters is exceeded.'
@@ -70,7 +70,7 @@ jobs:
           checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
           accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
       - name: Check for Resolves / Fixes
-        uses: gsactions/commit-message-checker@v2
+        uses: gsactions/commit-message-checker@v3
         with:
           pattern: '^.+(Resolves|Fixes): \#[0-9]+$'
           error: 'You need at least one "Resolves|Fixes: #<issue number>" line.'
